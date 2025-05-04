@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext'; 
 import { CheckCircle, XCircle, Star, Info, User, Calendar, Thermometer, Fuel, Settings, ChevronRight } from 'lucide-react';
 
 interface CarDetailProps {
@@ -25,6 +25,18 @@ interface CarDetailProps {
 
 const CarDetail: React.FC<CarDetailProps> = ({ car }) => {
   const [selectedImage, setSelectedImage] = React.useState<string>(car.images[0]);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleBookingClick = () => {
+    if (isAuthenticated) {
+      // Si connecté, rediriger directement vers la page de réservation
+      navigate(`/booking/${car.id}`);
+    } else {
+      // Si non connecté, rediriger vers la page de connexion avec l'url de redirection
+      navigate('/auth/login', { state: { from: `/booking/${car.id}` } });
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -57,12 +69,12 @@ const CarDetail: React.FC<CarDetailProps> = ({ car }) => {
           </div>
           <div className="mt-4 md:mt-0">
             <div className="text-3xl font-bold text-autowise-blue">{car.price} €<span className="text-sm text-gray-500 font-normal">/jour</span></div>
-            <Link 
-              to={`/booking/${car.id}`} 
+            <button 
+              onClick={handleBookingClick}
               className="mt-2 block w-full md:w-auto btn-primary text-center"
             >
               Réserver maintenant
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -197,12 +209,12 @@ const CarDetail: React.FC<CarDetailProps> = ({ car }) => {
                 </ol>
               </div>
               
-              <Link 
-                to={`/booking/${car.id}`} 
+              <button 
+                onClick={handleBookingClick}
                 className="mt-5 block w-full btn-primary text-center"
               >
                 Réserver maintenant
-              </Link>
+              </button>
             </div>
           </div>
         </div>

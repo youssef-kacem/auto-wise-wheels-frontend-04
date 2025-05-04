@@ -1,14 +1,20 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Car, User, Menu, X } from 'lucide-react';
+import { Car, User, Menu, X, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Simulé, à remplacer par un contexte d'authentification
+  const { isAuthenticated, logout, user } = useAuth();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
   };
 
   return (
@@ -43,10 +49,16 @@ const Navbar = () => {
           {/* Boutons */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
-              <Link to="/profile" className="btn-outline flex items-center">
-                <User size={18} className="mr-2" />
-                Mon Compte
-              </Link>
+              <>
+                <Link to="/profile" className="btn-outline flex items-center">
+                  <User size={18} className="mr-2" />
+                  {user?.name || 'Mon Compte'}
+                </Link>
+                <button onClick={handleLogout} className="btn-outline flex items-center text-red-600 border-red-600 hover:bg-red-50">
+                  <LogOut size={18} className="mr-2" />
+                  Déconnexion
+                </button>
+              </>
             ) : (
               <Link to="/auth" className="btn-outline">
                 Connexion
@@ -86,10 +98,19 @@ const Navbar = () => {
             </Link>
             <div className="pt-2 flex flex-col space-y-2">
               {isAuthenticated ? (
-                <Link to="/profile" className="btn-outline w-full text-center flex items-center justify-center" onClick={toggleMenu}>
-                  <User size={18} className="mr-2" />
-                  Mon Compte
-                </Link>
+                <>
+                  <Link to="/profile" className="btn-outline w-full text-center flex items-center justify-center" onClick={toggleMenu}>
+                    <User size={18} className="mr-2" />
+                    Mon Compte
+                  </Link>
+                  <button 
+                    onClick={handleLogout} 
+                    className="btn-outline w-full text-center flex items-center justify-center text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={18} className="mr-2" />
+                    Déconnexion
+                  </button>
+                </>
               ) : (
                 <Link to="/auth" className="btn-outline w-full text-center" onClick={toggleMenu}>
                   Connexion

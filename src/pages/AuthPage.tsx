@@ -1,18 +1,35 @@
 
-import React, { useState } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AuthPage = () => {
   const { action } = useParams<{ action: string }>();
   const [isRegistered, setIsRegistered] = useState(false);
+  const { isAuthenticated, login } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Redirection si déjà connecté
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = (location.state as any)?.from?.pathname || '/';
+      navigate(from);
+    }
+  }, [isAuthenticated, navigate, location.state]);
   
   // Redirection si venant de s'inscrire
   if (isRegistered) {
     return <Navigate to="/auth/login" />;
   }
+
+  // Simuler une connexion pour le développement
+  const handleDemoLogin = () => {
+    login('utilisateur@exemple.com', 'motdepasse');
+  };
 
   // Déterminer quelle action afficher (login ou register)
   let currentAction = action || 'login';
@@ -32,6 +49,11 @@ const AuthPage = () => {
                 <p className="text-gray-600 mt-2">
                   Bienvenue sur AutoWise, connectez-vous pour accéder à votre compte
                 </p>
+                {location.state && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+                    Vous devez être connecté pour accéder à cette page.
+                  </div>
+                )}
               </div>
             )}
 
@@ -54,7 +76,19 @@ const AuthPage = () => {
             )}
 
             {/* Formulaires */}
-            {currentAction === 'login' && <LoginForm />}
+            {currentAction === 'login' && (
+              <>
+                <LoginForm />
+                <div className="mt-4 border-t pt-4">
+                  <button 
+                    onClick={handleDemoLogin}
+                    className="w-full btn-primary bg-green-600 hover:bg-green-700 mt-2"
+                  >
+                    Connexion démo (cliquez ici pour simuler)
+                  </button>
+                </div>
+              </>
+            )}
             
             {currentAction === 'register' && <RegisterForm />}
             
