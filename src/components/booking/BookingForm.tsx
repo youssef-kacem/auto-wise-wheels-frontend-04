@@ -1,19 +1,23 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Calendar, MapPin, CreditCard, Check, Clock, Info } from 'lucide-react';
-import DateRangePicker from './DateRangePicker';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import DateSelection from './DateSelection';
+import LocationSelection from './LocationSelection';
+import BookingOptions from './BookingOptions';
+import BookingSummary from './BookingSummary';
+import { calculateDays, calculateTotalPrice } from '@/utils/bookingCalculations';
+
+interface Car {
+  id: number;
+  brand: string;
+  model: string;
+  year: number;
+  price: number;
+  imageUrl: string;
+}
 
 interface BookingFormProps {
-  car?: {
-    id: number;
-    brand: string;
-    model: string;
-    year: number;
-    price: number;
-    imageUrl: string;
-  };
+  car?: Car;
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
@@ -28,18 +32,6 @@ const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
   const [additionalOptions, setAdditionalOptions] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Calcul du nombre de jours et du prix total
-  const calculateDays = () => {
-    if (dateRange.from && dateRange.to) {
-      const diffTime = dateRange.to.getTime() - dateRange.from.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      return diffDays;
-    }
-    return 0;
-  };
-
-  const numberOfDays = calculateDays();
-  
   // Options additionnelles disponibles
   const availableOptions = [
     { id: 'gps', name: 'GPS', price: 5 },
@@ -58,28 +50,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
     });
   };
 
-  // Calcul du prix total
-  const calculateTotalPrice = () => {
-    if (!car) return 0;
-    let total = car.price * numberOfDays;
-    
-    // Coût du chauffeur
-    if (withDriver) {
-      total += 80 * numberOfDays; // 80€ par jour pour le chauffeur
-    }
-    
-    // Coût des options additionnelles
-    additionalOptions.forEach(optionId => {
-      const option = availableOptions.find(opt => opt.id === optionId);
-      if (option) {
-        total += option.price * numberOfDays;
-      }
-    });
-    
-    return total;
-  };
-
-  const totalPrice = calculateTotalPrice();
+  const numberOfDays = calculateDays(dateRange);
+  const totalPrice = calculateTotalPrice(
+    car?.price,
+    numberOfDays,
+    withDriver,
+    additionalOptions,
+    availableOptions
+  );
 
   // Soumission du formulaire
   const handleSubmit = (e: React.FormEvent) => {
@@ -122,123 +100,24 @@ const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
           <h2 className="text-xl font-semibold mb-4">Détails de la réservation</h2>
           
           {/* Sélecteur de dates */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Dates de location
-            </label>
-            <DateRangePicker onChange={setDateRange} />
-          </div>
+          <DateSelection onChange={setDateRange} />
           
           {/* Lieux de prise en charge et de retour */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="pickupLocation" className="block text-sm font-medium text-gray-700 mb-2">
-                Lieu de prise en charge
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                  <MapPin size={18} />
-                </span>
-                <input
-                  id="pickupLocation"
-                  type="text"
-                  value={pickupLocation}
-                  onChange={(e) => setPickupLocation(e.target.value)}
-                  className="input-field pl-10"
-                  placeholder="Adresse de prise en charge"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label htmlFor="returnLocation" className="block text-sm font-medium text-gray-700 mb-2">
-                Lieu de retour
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                  <MapPin size={18} />
-                </span>
-                <input
-                  id="returnLocation"
-                  type="text"
-                  value={returnLocation}
-                  onChange={(e) => setReturnLocation(e.target.value)}
-                  className="input-field pl-10"
-                  placeholder="Même que la prise en charge"
-                />
-              </div>
-              <div className="flex items-center mt-2">
-                <input
-                  id="sameLocation"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-autowise-blue focus:ring-autowise-blue"
-                  onChange={() => returnLocation ? setReturnLocation('') : setPickupLocation(returnLocation)}
-                />
-                <label htmlFor="sameLocation" className="ml-2 block text-sm text-gray-600">
-                  Même lieu pour le retour
-                </label>
-              </div>
-            </div>
-          </div>
+          <LocationSelection 
+            pickupLocation={pickupLocation}
+            returnLocation={returnLocation}
+            setPickupLocation={setPickupLocation}
+            setReturnLocation={setReturnLocation}
+          />
           
           {/* Options */}
-          <div>
-            <h3 className="text-lg font-medium mb-3">Options</h3>
-            
-            {/* Option chauffeur */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-3">
-              <div className="flex items-center">
-                <input
-                  id="withDriver"
-                  type="checkbox"
-                  checked={withDriver}
-                  onChange={() => setWithDriver(!withDriver)}
-                  className="h-4 w-4 rounded border-gray-300 text-autowise-blue focus:ring-autowise-blue"
-                />
-                <div className="ml-3">
-                  <label htmlFor="withDriver" className="block font-medium text-gray-700">
-                    Avec chauffeur
-                  </label>
-                  <p className="text-sm text-gray-500">Chauffeur professionnel inclus</p>
-                </div>
-              </div>
-              <span className="text-sm font-medium">
-                +80 € / jour
-              </span>
-            </div>
-            
-            {/* Options additionnelles */}
-            <div className="space-y-2">
-              {availableOptions.map(option => (
-                <div key={option.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <input
-                      id={option.id}
-                      type="checkbox"
-                      checked={additionalOptions.includes(option.id)}
-                      onChange={() => handleOptionChange(option.id)}
-                      className="h-4 w-4 rounded border-gray-300 text-autowise-blue focus:ring-autowise-blue"
-                    />
-                    <label htmlFor={option.id} className="ml-3 block font-medium text-gray-700">
-                      {option.name}
-                    </label>
-                  </div>
-                  <span className="text-sm font-medium">
-                    +{option.price} € / jour
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Infos sur la réservation */}
-          <div className="p-4 border border-amber-200 bg-amber-50 rounded-md flex items-start">
-            <Info size={20} className="text-amber-500 mr-2 mt-0.5" />
-            <p className="text-sm text-amber-700">
-              Une pièce d'identité valide et un permis de conduire seront demandés lors de la prise en charge du véhicule.
-            </p>
-          </div>
+          <BookingOptions 
+            withDriver={withDriver}
+            setWithDriver={setWithDriver}
+            additionalOptions={additionalOptions}
+            handleOptionChange={handleOptionChange}
+            availableOptions={availableOptions}
+          />
           
           <button
             type="submit"
@@ -262,121 +141,17 @@ const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
       
       {/* Récapitulatif */}
       <div>
-        <div className="bg-gray-50 rounded-lg p-5 sticky top-4">
-          <h2 className="text-xl font-semibold mb-4">Récapitulatif</h2>
-          
-          {car && (
-            <div className="flex items-center mb-4 pb-4 border-b border-gray-200">
-              <img 
-                src={car.imageUrl} 
-                alt={`${car.brand} ${car.model}`} 
-                className="w-20 h-20 object-cover rounded-md mr-4" 
-              />
-              <div>
-                <h3 className="font-medium text-gray-800">{car.brand} {car.model}</h3>
-                <p className="text-sm text-gray-500">{car.year}</p>
-              </div>
-            </div>
-          )}
-          
-          <div className="space-y-3">
-            <div className="flex items-start">
-              <Calendar size={18} className="mr-2 text-gray-500 mt-1" />
-              <div>
-                <p className="text-sm font-medium text-gray-800">Dates</p>
-                {dateRange.from && dateRange.to ? (
-                  <p className="text-sm text-gray-600">
-                    {format(dateRange.from, "dd/MM/yyyy", { locale: fr })} - {format(dateRange.to, "dd/MM/yyyy", { locale: fr })}
-                    <span className="block">
-                      ({numberOfDays} jour{numberOfDays > 1 ? 's' : ''})
-                    </span>
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">Non sélectionnées</p>
-                )}
-              </div>
-            </div>
-            
-            {pickupLocation && (
-              <div className="flex items-start">
-                <MapPin size={18} className="mr-2 text-gray-500 mt-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Prise en charge</p>
-                  <p className="text-sm text-gray-600">{pickupLocation}</p>
-                </div>
-              </div>
-            )}
-            
-            {returnLocation && (
-              <div className="flex items-start">
-                <MapPin size={18} className="mr-2 text-gray-500 mt-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Retour</p>
-                  <p className="text-sm text-gray-600">{returnLocation}</p>
-                </div>
-              </div>
-            )}
-            
-            {withDriver && (
-              <div className="flex items-start">
-                <Check size={18} className="mr-2 text-green-500 mt-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Avec chauffeur</p>
-                </div>
-              </div>
-            )}
-            
-            {additionalOptions.length > 0 && (
-              <div className="flex items-start">
-                <Check size={18} className="mr-2 text-green-500 mt-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Options additionnelles</p>
-                  <ul className="text-sm text-gray-600">
-                    {additionalOptions.map(optionId => {
-                      const option = availableOptions.find(opt => opt.id === optionId);
-                      return option && (
-                        <li key={option.id}>{option.name}</li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Prix de base</span>
-              <span>{car ? `${car.price} € × ${numberOfDays} jours` : '-'}</span>
-            </div>
-            
-            {withDriver && (
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-600">Chauffeur</span>
-                <span>80 € × {numberOfDays} jours</span>
-              </div>
-            )}
-            
-            {additionalOptions.length > 0 && additionalOptions.map(optionId => {
-              const option = availableOptions.find(opt => opt.id === optionId);
-              return option && (
-                <div key={option.id} className="flex justify-between mb-2">
-                  <span className="text-gray-600">{option.name}</span>
-                  <span>{option.price} € × {numberOfDays} jours</span>
-                </div>
-              );
-            })}
-            
-            <div className="flex justify-between font-bold text-lg mt-4 pt-2 border-t border-gray-200">
-              <span>Total</span>
-              <span>{totalPrice} €</span>
-            </div>
-          </div>
-          
-          <div className="mt-4 text-xs text-gray-500">
-            * Le paiement sera effectué lors de la prise en charge du véhicule.
-          </div>
-        </div>
+        <BookingSummary
+          car={car}
+          dateRange={dateRange}
+          pickupLocation={pickupLocation}
+          returnLocation={returnLocation}
+          withDriver={withDriver}
+          additionalOptions={additionalOptions}
+          availableOptions={availableOptions}
+          numberOfDays={numberOfDays}
+          totalPrice={totalPrice}
+        />
       </div>
     </div>
   );
