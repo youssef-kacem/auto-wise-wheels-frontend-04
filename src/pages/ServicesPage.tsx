@@ -1,7 +1,6 @@
-
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { ShieldCheck, Clock, MapPin, Users, Car, CreditCard, Star, Tool } from 'lucide-react';
+import { ShieldCheck, Clock, MapPin, Users, Car, CreditCard, Star, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ServicesPage = () => {
@@ -254,7 +253,7 @@ const ServicesPage = () => {
             
             <div className="flex bg-white p-6 rounded-lg shadow-sm">
               <div className="bg-autowise-blue bg-opacity-10 p-3 h-14 rounded-full mr-4 flex-shrink-0">
-                <Tool className="h-8 w-8 text-autowise-blue" />
+                <Settings className="h-8 w-8 text-autowise-blue" />
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">Services additionnels</h3>

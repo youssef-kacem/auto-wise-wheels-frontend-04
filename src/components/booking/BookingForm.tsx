@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Car, Calendar, MapPin, CreditCard, Check, Clock, Info } from 'lucide-react';
 import DateRangePicker from './DateRangePicker';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface BookingFormProps {
   car?: {
