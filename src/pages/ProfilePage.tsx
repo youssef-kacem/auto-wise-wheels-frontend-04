@@ -1,126 +1,112 @@
 
 import React, { useState } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import UserProfile from '@/components/user/UserProfile';
-import UserReservations from '@/components/user/UserReservations';
-import { User, Calendar, Settings, LogOut, CreditCard } from 'lucide-react';
+import Settings from '@/components/user/Settings';
+import { User, Settings as SettingsIcon, Bookmark, Car, Clock } from 'lucide-react';
 
-const ProfilePage = () => {
-  const { tab } = useParams<{ tab: string }>();
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Simulé, à remplacer par un contexte d'authentification
+const ProfilePage: React.FC = () => {
+  const { tab } = useParams<{ tab?: string }>();
+  const [activeTab, setActiveTab] = useState(tab || 'profile');
 
-  // Si l'utilisateur n'est pas authentifié, rediriger vers la page de connexion
-  if (!isAuthenticated) {
-    return <Navigate to="/auth/login" />;
-  }
-
-  // Déterminer quel onglet afficher
-  let currentTab = tab || 'profile';
-  if (!['profile', 'reservations', 'payment', 'settings'].includes(currentTab)) {
-    currentTab = 'profile';
-  }
-
-  const handleLogout = () => {
-    // Logique de déconnexion
-    setIsAuthenticated(false);
-  };
-
-  // Fonction pour déterminer si un onglet est actif
-  const isTabActive = (tabName: string) => {
-    return currentTab === tabName ? 'bg-autowise-blue text-white' : 'bg-white text-gray-700 hover:bg-gray-50';
+  const handleTabChange = (tabName: string) => {
+    setActiveTab(tabName);
   };
 
   return (
     <MainLayout>
-      <div className="bg-gray-50 min-h-[calc(100vh-64px)] py-8">
-        <div className="container-autowise">
-          <h1 className="text-3xl font-bold mb-8">Mon compte</h1>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                {/* Avatar et nom */}
-                <div className="p-6 border-b border-gray-100 text-center">
-                  <div className="w-20 h-20 rounded-full bg-autowise-blue bg-opacity-10 flex items-center justify-center text-autowise-blue mx-auto mb-3">
-                    <User size={32} />
-                  </div>
-                  <h2 className="font-semibold text-lg">Jean Dupont</h2>
-                  <p className="text-sm text-gray-500">jean.dupont@example.com</p>
-                </div>
-                
-                {/* Tabs navigation */}
-                <nav className="p-2">
-                  <Link
-                    to="/profile"
-                    className={`flex items-center py-3 px-4 rounded-md transition-colors mb-1 ${isTabActive('profile')}`}
-                  >
-                    <User size={18} className="mr-3" />
-                    Mon profil
-                  </Link>
-                  <Link
-                    to="/profile/reservations"
-                    className={`flex items-center py-3 px-4 rounded-md transition-colors mb-1 ${isTabActive('reservations')}`}
-                  >
-                    <Calendar size={18} className="mr-3" />
-                    Mes réservations
-                  </Link>
-                  <Link
-                    to="/profile/payment"
-                    className={`flex items-center py-3 px-4 rounded-md transition-colors mb-1 ${isTabActive('payment')}`}
-                  >
-                    <CreditCard size={18} className="mr-3" />
-                    Paiements
-                  </Link>
-                  <Link
-                    to="/profile/settings"
-                    className={`flex items-center py-3 px-4 rounded-md transition-colors mb-1 ${isTabActive('settings')}`}
-                  >
-                    <Settings size={18} className="mr-3" />
-                    Paramètres
-                  </Link>
+      <div className="container-autowise py-8">
+        <h1 className="text-2xl font-bold mb-8">Espace personnel</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Navigation latérale */}
+          <div className="md:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm border">
+              <ul className="divide-y">
+                <li>
                   <button
-                    onClick={handleLogout}
-                    className="flex items-center py-3 px-4 rounded-md transition-colors text-red-500 hover:bg-red-50 w-full text-left"
+                    className={`w-full text-left px-4 py-3 flex items-center ${activeTab === 'profile' ? 'text-autowise-blue font-medium' : 'text-gray-700'}`}
+                    onClick={() => handleTabChange('profile')}
                   >
-                    <LogOut size={18} className="mr-3" />
-                    Déconnexion
+                    <User size={18} className="mr-2" />
+                    Mon profil
                   </button>
-                </nav>
-              </div>
+                </li>
+                <li>
+                  <button
+                    className={`w-full text-left px-4 py-3 flex items-center ${activeTab === 'settings' ? 'text-autowise-blue font-medium' : 'text-gray-700'}`}
+                    onClick={() => handleTabChange('settings')}
+                  >
+                    <SettingsIcon size={18} className="mr-2" />
+                    Paramètres
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`w-full text-left px-4 py-3 flex items-center ${activeTab === 'reservations' ? 'text-autowise-blue font-medium' : 'text-gray-700'}`}
+                    onClick={() => handleTabChange('reservations')}
+                  >
+                    <Bookmark size={18} className="mr-2" />
+                    Mes réservations
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`w-full text-left px-4 py-3 flex items-center ${activeTab === 'history' ? 'text-autowise-blue font-medium' : 'text-gray-700'}`}
+                    onClick={() => handleTabChange('history')}
+                  >
+                    <Clock size={18} className="mr-2" />
+                    Historique
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`w-full text-left px-4 py-3 flex items-center ${activeTab === 'cars' ? 'text-autowise-blue font-medium' : 'text-gray-700'}`}
+                    onClick={() => handleTabChange('cars')}
+                  >
+                    <Car size={18} className="mr-2" />
+                    Mes voitures favorites
+                  </button>
+                </li>
+              </ul>
             </div>
-            
-            {/* Content */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                {currentTab === 'profile' && (
-                  <UserProfile />
-                )}
-                
-                {currentTab === 'reservations' && (
-                  <UserReservations />
-                )}
-                
-                {currentTab === 'payment' && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">Mes moyens de paiement</h2>
-                    <p className="text-gray-600">
-                      Cette fonctionnalité sera disponible prochainement.
-                    </p>
-                  </div>
-                )}
-                
-                {currentTab === 'settings' && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">Paramètres</h2>
-                    <p className="text-gray-600">
-                      Cette fonctionnalité sera disponible prochainement.
-                    </p>
-                  </div>
-                )}
+          </div>
+          
+          {/* Contenu */}
+          <div className="md:col-span-3">
+            {activeTab === 'profile' && <UserProfile />}
+            {activeTab === 'settings' && <Settings />}
+            {activeTab === 'reservations' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold mb-4">Mes réservations</h2>
+                <div className="p-4 bg-gray-50 rounded-md border border-dashed border-gray-300">
+                  <p className="text-gray-600 text-center">
+                    Vous n'avez pas encore de réservations actives
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+            {activeTab === 'history' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold mb-4">Historique</h2>
+                <div className="p-4 bg-gray-50 rounded-md border border-dashed border-gray-300">
+                  <p className="text-gray-600 text-center">
+                    Votre historique de location est vide
+                  </p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'cars' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold mb-4">Mes voitures favorites</h2>
+                <div className="p-4 bg-gray-50 rounded-md border border-dashed border-gray-300">
+                  <p className="text-gray-600 text-center">
+                    Vous n'avez pas encore de voitures favorites
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
