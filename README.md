@@ -1,73 +1,86 @@
-# Welcome to your Lovable project
 
-## Project info
+# AutoWise - Plateforme de location de voitures
 
-**URL**: https://lovable.dev/projects/96f8cb82-a61e-481d-a0ac-c1678b45b591
+![AutoWise Logo](/public/lovable-uploads/9524452a-d5e6-4363-8bfa-1b7f6dd5d92b.png)
 
-## How can I edit this code?
+Bienvenue sur le dépôt du frontend d'**AutoWise**, une application web complète de location de voitures développée avec React et Tailwind CSS.
 
-There are several ways of editing your application.
+## Fonctionnalités
 
-**Use Lovable**
+- **Page d'accueil** présentant l'agence et ses services
+- **Liste des voitures disponibles** avec filtres (marque, climatisation, chauffeur, âge, dates)
+- **Page détaillée** pour chaque voiture avec photos, description et options
+- **Interface d'authentification** (inscription, connexion, réinitialisation de mot de passe)
+- **Espace utilisateur** pour la gestion des réservations et des informations personnelles
+- **Interface de réservation** pour choisir les dates, options et confirmer la réservation
+- **Design responsive** adapté à tous les appareils
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/96f8cb82-a61e-481d-a0ac-c1678b45b591) and start prompting.
+## Technologies utilisées
 
-Changes made via Lovable will be committed automatically to this repo.
+- React
+- Tailwind CSS
+- TypeScript
+- React Router DOM
+- Lucide React (icônes)
+- Date-fns (gestion des dates)
 
-**Use your preferred IDE**
+## Structure du projet
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```
+src/
+├── components/            # Composants réutilisables
+│   ├── auth/              # Composants liés à l'authentification
+│   ├── booking/           # Composants liés à la réservation
+│   ├── cars/              # Composants liés aux voitures
+│   ├── home/              # Composants de la page d'accueil
+│   ├── layout/            # Composants de mise en page
+│   ├── ui/                # Composants d'interface utilisateur
+│   └── user/              # Composants liés à l'espace utilisateur
+├── hooks/                 # Hooks personnalisés
+├── lib/                   # Fonctions utilitaires
+└── pages/                 # Pages principales de l'application
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Installation et lancement
 
-Follow these steps:
+Pour installer et lancer le projet en local, suivez ces étapes :
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# Cloner le dépôt
+git clone <URL_DU_DEPOT>
+cd autowise-frontend
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Installer les dépendances
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Lancer l'application en mode développement
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+L'application sera accessible à l'adresse http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Connexion à une API backend
 
-**Use GitHub Codespaces**
+Ce frontend est conçu pour se connecter à une API Strapi. Pour configurer l'URL de l'API, veuillez modifier le fichier de configuration approprié.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Déploiement
 
-## What technologies are used for this project?
+Pour créer une version de production optimisée :
 
-This project is built with:
+```bash
+npm run build
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Les fichiers statiques seront générés dans le dossier `dist/`.
 
-## How can I deploy this project?
+## Captures d'écran
 
-Simply open [Lovable](https://lovable.dev/projects/96f8cb82-a61e-481d-a0ac-c1678b45b591) and click on Share -> Publish.
+*Des captures d'écran peuvent être ajoutées ici.*
 
-## Can I connect a custom domain to my Lovable project?
+## Auteur
 
-Yes, you can!
+AutoWise Team - [contact@autowise.fr](mailto:contact@autowise.fr)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Licence
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Ce projet est sous licence MIT - voir le fichier LICENSE pour plus de détails.
