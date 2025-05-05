@@ -1,12 +1,19 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Car, User, Menu, X, LogOut } from 'lucide-react';
+import { Car, User, Menu, X, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isAuthenticated, logout, user } = useAuth();
+  const isAdmin = localStorage.getItem('autowise_admin_authenticated') === 'true';
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -68,10 +75,50 @@ const Navbar = () => {
               <Car size={18} className="mr-2" />
               Réserver
             </Link>
+            
+            {/* Bouton Admin discret avec Tooltip */}
+            {isAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link 
+                      to="/admin/dashboard" 
+                      className="ml-2 p-2 rounded-full text-gray-500 hover:text-autowise-blue hover:bg-gray-100 transition-colors"
+                      aria-label="Administration"
+                    >
+                      <Settings size={20} />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Accéder à l'administration</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
 
           {/* Menu mobile */}
           <div className="flex md:hidden items-center">
+            {/* Bouton Admin mobile discret avec Tooltip */}
+            {isAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link 
+                      to="/admin/dashboard" 
+                      className="mr-3 p-1.5 rounded-full text-gray-500 hover:text-autowise-blue hover:bg-gray-100 transition-colors"
+                      aria-label="Administration"
+                    >
+                      <Settings size={18} />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Accéder à l'administration</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
             <button
               onClick={toggleMenu}
               className="text-gray-700 hover:text-autowise-blue focus:outline-none"
