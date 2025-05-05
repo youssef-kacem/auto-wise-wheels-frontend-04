@@ -19,6 +19,17 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import CarComparatorPage from "./pages/CarComparatorPage";
 
+// Admin Pages
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminCarsPage from "./pages/admin/AdminCarsPage";
+import AdminReservationsPage from "./pages/admin/AdminReservationsPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminStatisticsPage from "./pages/admin/AdminStatisticsPage";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -29,6 +40,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Routes client */}
             <Route path="/" element={<Index />} />
             <Route path="/cars" element={<CarsPage />} />
             <Route path="/cars/:id" element={<CarDetailPage />} />
@@ -52,6 +64,46 @@ const App = () => (
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/comparator" element={<CarComparatorPage />} />
+
+            {/* Routes admin */}
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={
+              <AdminProtectedRoute>
+                <AdminDashboardPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/cars" element={
+              <AdminProtectedRoute>
+                <AdminCarsPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/reservations" element={
+              <AdminProtectedRoute>
+                <AdminReservationsPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <AdminProtectedRoute>
+                <AdminUsersPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/statistics" element={
+              <AdminProtectedRoute>
+                <AdminStatisticsPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/notifications" element={
+              <AdminProtectedRoute>
+                <AdminNotificationsPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <AdminProtectedRoute>
+                <AdminSettingsPage />
+              </AdminProtectedRoute>
+            } />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
