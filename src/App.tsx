@@ -17,6 +17,7 @@ import ContactPage from "./pages/ContactPage";
 import ServicesPage from "./pages/ServicesPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import CarComparatorPage from "./pages/CarComparatorPage";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             } />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/services" element={<ServicesPage />} />
+            <Route path="/comparator" element={<CarComparatorPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

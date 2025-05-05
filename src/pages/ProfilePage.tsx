@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import UserProfile from '@/components/user/UserProfile';
 import Settings from '@/components/user/Settings';
+import UserReservations from '@/components/user/UserReservations';
 import { User, Settings as SettingsIcon, Bookmark, Car, Clock } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
@@ -77,16 +78,7 @@ const ProfilePage: React.FC = () => {
           <div className="md:col-span-3">
             {activeTab === 'profile' && <UserProfile />}
             {activeTab === 'settings' && <Settings />}
-            {activeTab === 'reservations' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4">Mes réservations</h2>
-                <div className="p-4 bg-gray-50 rounded-md border border-dashed border-gray-300">
-                  <p className="text-gray-600 text-center">
-                    Vous n'avez pas encore de réservations actives
-                  </p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'reservations' && <UserReservations />}
             {activeTab === 'history' && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <h2 className="text-xl font-semibold mb-4">Historique</h2>

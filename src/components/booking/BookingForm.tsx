@@ -5,7 +5,9 @@ import DateSelection from './DateSelection';
 import LocationSelection from './LocationSelection';
 import BookingOptions from './BookingOptions';
 import BookingSummary from './BookingSummary';
+import PaymentModule from './PaymentModule';
 import { calculateDays, calculateTotalPrice } from '@/utils/bookingCalculations';
+import { CreditCard, Check } from 'lucide-react';
 
 interface Car {
   id: number;
@@ -22,6 +24,7 @@ interface BookingFormProps {
 
 const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
   const [loading, setLoading] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<'details' | 'payment' | 'confirmation'>('details');
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
@@ -59,84 +62,121 @@ const BookingForm: React.FC<BookingFormProps> = ({ car }) => {
     availableOptions
   );
 
-  // Soumission du formulaire
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!dateRange.from || !dateRange.to) {
+  // Fonction pour vérifier si le formulaire est valide
+  const isFormValid = () => {
+    return dateRange.from && dateRange.to && pickupLocation;
+  };
+
+  // Passer à l'écran de paiement
+  const handleContinueToPayment = () => {
+    if (!isFormValid()) {
       toast({
-        title: "Dates manquantes",
-        description: "Veuillez sélectionner les dates de location.",
+        title: "Formulaire incomplet",
+        description: "Veuillez remplir tous les champs obligatoires.",
         variant: "destructive",
       });
       return;
     }
-    
-    if (!pickupLocation) {
-      toast({
-        title: "Lieu de prise en charge manquant",
-        description: "Veuillez indiquer le lieu de prise en charge.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    setPaymentStep('payment');
+  };
+
+  // Soumettre le paiement
+  const handleProcessPayment = (paymentData: any) => {
     setLoading(true);
     
-    // Simuler la soumission du formulaire
+    // Simulation de traitement de paiement
     setTimeout(() => {
-      toast({
-        title: "Réservation confirmée",
-        description: "Votre demande de réservation a été envoyée. Vous recevrez une confirmation par email.",
-      });
+      setPaymentStep('confirmation');
       setLoading(false);
+      toast({
+        title: "Paiement accepté",
+        description: "Votre réservation a été confirmée avec succès.",
+      });
     }, 1500);
+  };
+
+  // Revenir à l'étape détails
+  const handleBackToDetails = () => {
+    setPaymentStep('details');
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <h2 className="text-xl font-semibold mb-4">Détails de la réservation</h2>
-          
-          {/* Sélecteur de dates */}
-          <DateSelection onChange={setDateRange} />
-          
-          {/* Lieux de prise en charge et de retour */}
-          <LocationSelection 
-            pickupLocation={pickupLocation}
-            returnLocation={returnLocation}
-            setPickupLocation={setPickupLocation}
-            setReturnLocation={setReturnLocation}
-          />
-          
-          {/* Options */}
-          <BookingOptions 
-            withDriver={withDriver}
-            setWithDriver={setWithDriver}
-            additionalOptions={additionalOptions}
-            handleOptionChange={handleOptionChange}
-            availableOptions={availableOptions}
-          />
-          
-          <button
-            type="submit"
-            disabled={loading || !dateRange.from || !dateRange.to || !pickupLocation}
-            className="w-full btn-primary flex justify-center items-center py-3 mt-6"
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Réservation en cours...
-              </span>
-            ) : (
-              "Confirmer la réservation"
-            )}
-          </button>
-        </form>
+        {paymentStep === 'details' && (
+          <form className="space-y-6">
+            <h2 className="text-xl font-semibold mb-4">Détails de la réservation</h2>
+            
+            {/* Sélecteur de dates */}
+            <DateSelection onChange={setDateRange} />
+            
+            {/* Lieux de prise en charge et de retour */}
+            <LocationSelection 
+              pickupLocation={pickupLocation}
+              returnLocation={returnLocation}
+              setPickupLocation={setPickupLocation}
+              setReturnLocation={setReturnLocation}
+            />
+            
+            {/* Options */}
+            <BookingOptions 
+              withDriver={withDriver}
+              setWithDriver={setWithDriver}
+              additionalOptions={additionalOptions}
+              handleOptionChange={handleOptionChange}
+              availableOptions={availableOptions}
+            />
+            
+            <button
+              type="button"
+              onClick={handleContinueToPayment}
+              disabled={!isFormValid()}
+              className="w-full btn-primary flex justify-center items-center py-3 mt-6"
+            >
+              <CreditCard size={18} className="mr-2" />
+              Continuer vers le paiement
+            </button>
+          </form>
+        )}
+
+        {paymentStep === 'payment' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Paiement</h2>
+              <button 
+                onClick={handleBackToDetails}
+                className="text-sm text-autowise-blue hover:underline"
+              >
+                Revenir aux détails
+              </button>
+            </div>
+            
+            <PaymentModule 
+              totalPrice={totalPrice}
+              onProcessPayment={handleProcessPayment}
+              loading={loading}
+            />
+          </div>
+        )}
+
+        {paymentStep === 'confirmation' && (
+          <div className="bg-white border rounded-lg p-6 text-center space-y-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check size={32} className="text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-green-600">Réservation confirmée!</h2>
+            <p className="text-gray-600">
+              Merci pour votre réservation. Un email de confirmation a été envoyé à votre adresse.
+            </p>
+            <div className="p-4 bg-gray-50 rounded-lg border mt-6 text-left">
+              <h3 className="font-medium mb-2">Détails de la réservation</h3>
+              <p><span className="font-medium">Référence:</span> #REF-{Math.floor(Math.random() * 1000000)}</p>
+              <p><span className="font-medium">Véhicule:</span> {car?.brand} {car?.model}</p>
+              <p><span className="font-medium">Dates:</span> {dateRange.from && dateRange.to ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}` : 'N/A'}</p>
+              <p><span className="font-medium">Lieu de prise en charge:</span> {pickupLocation}</p>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Récapitulatif */}
