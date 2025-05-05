@@ -55,7 +55,6 @@ const BookingNotifications: React.FC = () => {
     toast({
       title: "Préférences enregistrées",
       description: "Vos préférences de notification ont été sauvegardées.",
-      icon: <Check className="h-4 w-4" />
     });
   };
 
