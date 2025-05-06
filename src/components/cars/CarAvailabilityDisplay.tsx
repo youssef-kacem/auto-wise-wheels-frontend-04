@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -135,7 +136,7 @@ const CarAvailabilityDisplay: React.FC<CarAvailabilityDisplayProps> = ({ availab
             <h4 className="text-sm font-medium text-gray-600 mb-2">Calendrier de disponibilité:</h4>
             <Calendar
               mode="default"
-              className="rounded border p-2 pointer-events-auto"
+              className="rounded border p-2 pointer-events-auto w-full max-w-xs"
               modifiersClassNames={{
                 selected: "bg-autowise-blue text-white",
                 today: "border border-autowise-blue",
