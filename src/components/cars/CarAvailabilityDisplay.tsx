@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarClock, Check, Clock } from 'lucide-react';
+import { CalendarClock, Check, Clock, Calendar as CalendarIcon } from 'lucide-react';
 
 export interface AvailabilityPeriod {
   id: string;
