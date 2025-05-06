@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Plus, Trash, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash, X, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -27,30 +27,48 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
   const [newPeriod, setNewPeriod] = useState<{
     startDate: Date | undefined;
     endDate: Date | undefined;
+    startTime: string;
+    endTime: string;
   }>({
     startDate: undefined,
     endDate: undefined,
+    startTime: "08:00",
+    endTime: "18:00",
   });
   const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
 
   // Ajouter une nouvelle période de disponibilité
   const addAvailabilityPeriod = () => {
     if (newPeriod.startDate && newPeriod.endDate) {
+      // Créer les dates complètes avec heures
+      const startDateTime = new Date(newPeriod.startDate);
+      const endDateTime = new Date(newPeriod.endDate);
+      
+      // Appliquer les heures et minutes
+      if (newPeriod.startTime) {
+        const [startHours, startMinutes] = newPeriod.startTime.split(':').map(Number);
+        startDateTime.setHours(startHours, startMinutes);
+      }
+      
+      if (newPeriod.endTime) {
+        const [endHours, endMinutes] = newPeriod.endTime.split(':').map(Number);
+        endDateTime.setHours(endHours, endMinutes);
+      }
+      
       // Vérifier que la date de fin est après la date de début
-      if (newPeriod.endDate < newPeriod.startDate) {
-        alert("La date de fin doit être postérieure à la date de début");
+      if (endDateTime < startDateTime) {
+        alert("La date et heure de fin doivent être postérieures à la date et heure de début");
         return;
       }
 
       const newAvailabilityPeriod: AvailabilityPeriod = {
         id: `period-${Date.now()}`,
-        startDate: newPeriod.startDate,
-        endDate: newPeriod.endDate,
+        startDate: startDateTime,
+        endDate: endDateTime,
       };
 
       onChange([...availabilityPeriods, newAvailabilityPeriod]);
-      setNewPeriod({ startDate: undefined, endDate: undefined });
-      setIsAddingPeriod(false);
+      resetPeriodForm();
     }
   };
 
@@ -66,6 +84,8 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
       setNewPeriod({
         startDate: periodToEdit.startDate,
         endDate: periodToEdit.endDate,
+        startTime: format(periodToEdit.startDate, "HH:mm"),
+        endTime: format(periodToEdit.endDate, "HH:mm"),
       });
       setEditingPeriodId(id);
       setIsAddingPeriod(true);
@@ -75,8 +95,23 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
   // Sauvegarder les modifications d'une période
   const saveEditedPeriod = () => {
     if (editingPeriodId && newPeriod.startDate && newPeriod.endDate) {
-      if (newPeriod.endDate < newPeriod.startDate) {
-        alert("La date de fin doit être postérieure à la date de début");
+      // Créer des dates avec les heures
+      const startDateTime = new Date(newPeriod.startDate);
+      const endDateTime = new Date(newPeriod.endDate);
+      
+      // Appliquer les heures et minutes
+      if (newPeriod.startTime) {
+        const [startHours, startMinutes] = newPeriod.startTime.split(':').map(Number);
+        startDateTime.setHours(startHours, startMinutes);
+      }
+      
+      if (newPeriod.endTime) {
+        const [endHours, endMinutes] = newPeriod.endTime.split(':').map(Number);
+        endDateTime.setHours(endHours, endMinutes);
+      }
+      
+      if (endDateTime < startDateTime) {
+        alert("La date et heure de fin doivent être postérieures à la date et heure de début");
         return;
       }
 
@@ -84,25 +119,51 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
         if (period.id === editingPeriodId) {
           return {
             ...period,
-            startDate: newPeriod.startDate,
-            endDate: newPeriod.endDate,
+            startDate: startDateTime,
+            endDate: endDateTime,
           };
         }
         return period;
       });
 
       onChange(updatedPeriods);
-      setNewPeriod({ startDate: undefined, endDate: undefined });
-      setEditingPeriodId(null);
-      setIsAddingPeriod(false);
+      resetPeriodForm();
     }
   };
 
-  // Annuler l'ajout ou la modification
-  const cancelAddOrEdit = () => {
-    setNewPeriod({ startDate: undefined, endDate: undefined });
+  // Réinitialiser le formulaire d'ajout/modification de période
+  const resetPeriodForm = () => {
+    setNewPeriod({
+      startDate: undefined,
+      endDate: undefined,
+      startTime: "08:00",
+      endTime: "18:00",
+    });
     setEditingPeriodId(null);
     setIsAddingPeriod(false);
+  };
+
+  // Formater l'affichage des périodes
+  const formatDateTimeRange = (startDate: Date, endDate: Date) => {
+    const sameDay = startDate.toDateString() === endDate.toDateString();
+    
+    if (sameDay) {
+      return (
+        <>
+          <span className="font-medium">{format(startDate, "dd MMMM yyyy", { locale: fr })}</span>
+          <span> • </span>
+          <span>{format(startDate, "HH:mm", { locale: fr })} - {format(endDate, "HH:mm", { locale: fr })}</span>
+        </>
+      );
+    }
+    
+    return (
+      <>
+        <span className="font-medium">{format(startDate, "dd MMM", { locale: fr })} {format(startDate, "HH:mm", { locale: fr })}</span>
+        <span> - </span>
+        <span className="font-medium">{format(endDate, "dd MMM yyyy", { locale: fr })} {format(endDate, "HH:mm", { locale: fr })}</span>
+      </>
+    );
   };
 
   return (
@@ -127,12 +188,12 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
           {availabilityPeriods.map((period) => (
             <div 
               key={period.id} 
-              className="flex items-center justify-between p-2 bg-gray-50 rounded-md border"
+              className="flex items-center justify-between p-3 bg-blue-50 rounded-md border border-blue-100"
             >
-              <div className="flex items-center">
+              <div className="flex items-center text-sm">
                 <CalendarIcon size={16} className="mr-2 text-autowise-blue" />
-                <span>
-                  {format(period.startDate, "dd/MM/yyyy HH:mm", { locale: fr })} - {format(period.endDate, "dd/MM/yyyy HH:mm", { locale: fr })}
+                <span className="text-gray-700">
+                  {formatDateTimeRange(period.startDate, period.endDate)}
                 </span>
               </div>
               <div className="flex space-x-1">
@@ -140,7 +201,7 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
                   onClick={() => editPeriod(period.id)} 
                   variant="ghost" 
                   size="sm"
-                  className="hover:bg-blue-50 hover:text-autowise-blue transition-colors"
+                  className="hover:bg-blue-100 hover:text-autowise-blue transition-colors"
                 >
                   Modifier
                 </Button>
@@ -157,9 +218,9 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
           ))}
         </div>
       ) : (
-        <div className="text-center py-4 bg-gray-50 rounded-md border">
+        <div className="text-center py-6 bg-gray-50 rounded-md border">
           <p className="text-gray-500">Aucune période de disponibilité définie</p>
-          <p className="text-xs text-gray-400">Ajoutez des périodes pour indiquer quand ce véhicule est disponible à la location</p>
+          <p className="text-xs text-gray-400 mt-1">Ajoutez des périodes pour indiquer quand ce véhicule est disponible à la location</p>
         </div>
       )}
 
@@ -169,7 +230,7 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
           <div className="flex justify-between items-center">
             <h4 className="font-medium">{editingPeriodId ? "Modifier la période" : "Ajouter une période"}</h4>
             <Button 
-              onClick={cancelAddOrEdit} 
+              onClick={resetPeriodForm} 
               variant="ghost" 
               size="sm"
               className="text-gray-500 hover:bg-gray-200 transition-colors"
@@ -179,106 +240,93 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Sélecteur de date de début */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
-              <div className="flex">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !newPeriod.startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newPeriod.startDate ? format(newPeriod.startDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={newPeriod.startDate}
-                      onSelect={(date) => setNewPeriod({ ...newPeriod, startDate: date })}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              {newPeriod.startDate && (
-                <div className="mt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Heure de début</label>
-                  <input
-                    type="time"
-                    value={newPeriod.startDate ? format(newPeriod.startDate, "HH:mm") : ""}
-                    onChange={(e) => {
-                      if (newPeriod.startDate && e.target.value) {
-                        const [hours, minutes] = e.target.value.split(':').map(Number);
-                        const newDate = new Date(newPeriod.startDate);
-                        newDate.setHours(hours, minutes);
-                        setNewPeriod({ ...newPeriod, startDate: newDate });
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
+            {/* Sélection des dates */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
+                <div className="flex">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newPeriod.startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newPeriod.startDate ? format(newPeriod.startDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={newPeriod.startDate}
+                        onSelect={(date) => setNewPeriod({ ...newPeriod, startDate: date })}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heure de début</label>
+                <input
+                  type="time"
+                  value={newPeriod.startTime}
+                  onChange={(e) => setNewPeriod({ ...newPeriod, startTime: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
             </div>
 
-            {/* Sélecteur de date de fin */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
-              <div className="flex">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !newPeriod.endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newPeriod.endDate ? format(newPeriod.endDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={newPeriod.endDate}
-                      onSelect={(date) => setNewPeriod({ ...newPeriod, endDate: date })}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              {newPeriod.endDate && (
-                <div className="mt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Heure de fin</label>
-                  <input
-                    type="time"
-                    value={newPeriod.endDate ? format(newPeriod.endDate, "HH:mm") : ""}
-                    onChange={(e) => {
-                      if (newPeriod.endDate && e.target.value) {
-                        const [hours, minutes] = e.target.value.split(':').map(Number);
-                        const newDate = new Date(newPeriod.endDate);
-                        newDate.setHours(hours, minutes);
-                        setNewPeriod({ ...newPeriod, endDate: newDate });
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
+                <div className="flex">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newPeriod.endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newPeriod.endDate ? format(newPeriod.endDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={newPeriod.endDate}
+                        onSelect={(date) => setNewPeriod({ ...newPeriod, endDate: date })}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heure de fin</label>
+                <input
+                  type="time"
+                  value={newPeriod.endTime}
+                  onChange={(e) => setNewPeriod({ ...newPeriod, endTime: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
             </div>
           </div>
 
           <div className="flex justify-end space-x-2 mt-4">
             <Button
-              onClick={cancelAddOrEdit}
+              onClick={resetPeriodForm}
               variant="outline"
               className="hover:bg-gray-100 transition-colors"
             >
@@ -286,10 +334,14 @@ const CarAvailabilityManager: React.FC<CarAvailabilityManagerProps> = ({
             </Button>
             <Button
               onClick={editingPeriodId ? saveEditedPeriod : addAvailabilityPeriod}
-              disabled={!newPeriod.startDate || !newPeriod.endDate}
+              disabled={!newPeriod.startDate || !newPeriod.endDate || !newPeriod.startTime || !newPeriod.endTime}
               className="bg-autowise-blue hover:bg-blue-700 transition-colors"
             >
-              {editingPeriodId ? "Enregistrer" : "Ajouter"}
+              {editingPeriodId ? (
+                <><Check size={16} className="mr-1" /> Enregistrer</>
+              ) : (
+                <><Plus size={16} className="mr-1" /> Ajouter</>
+              )}
             </Button>
           </div>
         </div>
