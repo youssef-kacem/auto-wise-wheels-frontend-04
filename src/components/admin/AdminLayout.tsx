@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Car, 
@@ -23,6 +23,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const adminEmail = localStorage.getItem('autowise_admin_email');
@@ -36,6 +37,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
     { name: 'Notifications', href: '/admin/notifications', icon: Bell },
     { name: 'Paramètres', href: '/admin/settings', icon: Settings },
   ];
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('autowise_admin_authenticated');
@@ -91,21 +96,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
           
           <nav className="mt-5 flex-1 px-2 space-y-1">
             {navItems.map((item) => {
-              const isActive = currentPage === item.name.toLowerCase();
+              const active = isActive(item.href);
               return (
                 <a
                   key={item.name}
                   href={item.href}
                   className={`${
-                    isActive
+                    active
                       ? 'bg-gray-900 text-white'
                       : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                  } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors duration-200`}
                 >
                   <item.icon
                     className={`${
-                      isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'
-                    } mr-3 flex-shrink-0 h-6 w-6`}
+                      active ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'
+                    } mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200`}
                   />
                   {item.name}
                 </a>
@@ -116,7 +121,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
           <div className="p-4 border-t border-gray-700">
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-2 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+              className="flex items-center w-full px-2 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-colors duration-200"
             >
               <LogOut className="mr-3 h-6 w-6 text-gray-400" />
               Déconnexion
@@ -146,21 +151,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
             
             <nav className="mt-5 flex-1 px-2 space-y-1">
               {navItems.map((item) => {
-                const isActive = currentPage === item.name.toLowerCase();
+                const active = isActive(item.href);
                 return (
                   <a
                     key={item.name}
                     href={item.href}
                     className={`${
-                      isActive
+                      active
                         ? 'bg-gray-900 text-white'
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                    } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
+                    } group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors duration-200`}
                   >
                     <item.icon
                       className={`${
-                        isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'
-                      } mr-3 flex-shrink-0 h-6 w-6`}
+                        active ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'
+                      } mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200`}
                     />
                     {item.name}
                   </a>
@@ -171,9 +176,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentPage }) => {
             <div className="p-4 border-t border-gray-700">
               <button
                 onClick={handleLogout}
-                className="flex items-center w-full px-2 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+                className="flex items-center w-full px-2 py-2 text-base font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-colors duration-200"
               >
-                <LogOut className="mr-3 h-6 w-6 text-gray-400" />
+                <LogOut className="mr-3 h-6 w-6 text-gray-400 group-hover:text-gray-300" />
                 Déconnexion
               </button>
             </div>
