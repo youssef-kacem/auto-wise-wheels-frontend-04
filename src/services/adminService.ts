@@ -183,21 +183,21 @@ export const updateReservationStatus = async (id: string, status: 'pending' | 'c
 export const fetchStatistics = async () => {
   // Statistiques de base
   const [
-    { data: totalCars, error: carsError },
-    { data: totalUsers, error: usersError },
-    { data: totalReservations, error: resError }
+    carsResponse,
+    usersResponse,
+    reservationsResponse
   ] = await Promise.all([
-    supabase.from('cars').select('id', { count: 'exact', head: true }),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }),
-    supabase.from('reservations').select('id', { count: 'exact', head: true })
+    supabase.from('cars').select('id', { count: 'exact' }),
+    supabase.from('profiles').select('id', { count: 'exact' }),
+    supabase.from('reservations').select('id', { count: 'exact' })
   ]);
   
-  if (carsError || usersError || resError) {
+  if (carsResponse.error || usersResponse.error || reservationsResponse.error) {
     throw new Error("Erreur lors de la récupération des statistiques");
   }
   
   // Réservations par statut
-  const { data: reservationsByStatus, error: statusError } = await supabase
+  const reservationsByStatusPromise = supabase
     .from('reservations')
     .select('status')
     .then(({ data, error }) => {
@@ -215,17 +215,19 @@ export const fetchStatistics = async () => {
       });
       
       return { data: counts, error: null };
-    })
-    .catch(err => ({ data: null, error: err }));
-  
-  if (statusError) {
-    throw statusError;
+    });
+
+  try {
+    const { data: reservationsByStatus } = await reservationsByStatusPromise;
+    
+    return {
+      totalCars: carsResponse.count || 0,
+      totalUsers: usersResponse.count || 0,
+      totalReservations: reservationsResponse.count || 0,
+      reservationsByStatus
+    };
+  } catch (error) {
+    console.error("Erreur lors du comptage des réservations par statut:", error);
+    throw error;
   }
-  
-  return {
-    totalCars: totalCars?.count || 0,
-    totalUsers: totalUsers?.count || 0,
-    totalReservations: totalReservations?.count || 0,
-    reservationsByStatus
-  };
 };

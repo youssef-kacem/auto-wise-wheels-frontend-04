@@ -29,6 +29,19 @@ const Navbar = () => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  // Récupérer le nom d'utilisateur à partir des métadonnées ou utiliser un fallback
+  const getUserDisplayName = () => {
+    if (user && user.user_metadata) {
+      const firstName = user.user_metadata.first_name;
+      const lastName = user.user_metadata.last_name;
+      
+      if (firstName || lastName) {
+        return [firstName, lastName].filter(Boolean).join(' ');
+      }
+    }
+    return 'Mon Compte';
+  };
+
   return (
     <nav className="bg-white shadow-sm">
       <div className="container-autowise py-4">
@@ -69,7 +82,7 @@ const Navbar = () => {
                 <Link to="/profile" 
                   className={`btn-outline flex items-center ${isActive('/profile') ? 'bg-autowise-blue text-white' : ''}`}>
                   <User size={18} className="mr-2" />
-                  {user?.name || 'Mon Compte'}
+                  {getUserDisplayName()}
                 </Link>
                 <button onClick={handleLogout} className="btn-outline flex items-center text-red-600 border-red-600 hover:bg-red-50">
                   <LogOut size={18} className="mr-2" />
