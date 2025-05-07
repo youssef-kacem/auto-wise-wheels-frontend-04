@@ -1,67 +1,58 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, LogIn } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, isAuthenticated, isAdmin } = useAuth();
   const { toast } = useToast();
 
-  // Liste temporaire d'administrateurs (à remplacer par une authentification réelle)
-  const adminUsers = [
-    { email: 'admin@autowise.com', password: 'admin123' },
-    { email: 'manager@autowise.com', password: 'manager123' }
-  ];
+  // Si l'utilisateur est déjà connecté et est admin, rediriger vers le dashboard
+  useEffect(() => {
+    if (isAuthenticated && isAdmin) {
+      navigate('/admin/dashboard');
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simuler un délai d'authentification
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Vérifier les identifiants
-    const adminUser = adminUsers.find(user => 
-      user.email === email && user.password === password
-    );
-
-    if (adminUser) {
-      // Stocker l'information de connexion admin
-      localStorage.setItem('autowise_admin_authenticated', 'true');
-      localStorage.setItem('autowise_admin_email', email);
+    try {
+      // Utiliser la fonction login du contexte d'authentification
+      await login(email, password);
       
+      // La vérification admin se fait automatiquement dans le contexte
       toast({
         title: "Connexion réussie",
-        description: "Bienvenue dans l'espace administration",
+        description: "Bienvenue dans l'espace d'administration",
       });
       
-      navigate('/admin/dashboard');
-    } else {
+    } catch (error: any) {
       toast({
-        title: "Erreur d'authentification",
-        description: "Identifiants incorrects. Veuillez réessayer.",
-        variant: "destructive"
+        title: "Erreur de connexion",
+        description: error.message || "Identifiants invalides",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Shield className="h-12 w-12 text-autowise-blue" />
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          AutoWise Administration
+        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+          Administration AutoWise
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Accès réservé aux administrateurs
+          Connexion à l'espace d'administration
         </p>
       </div>
 
@@ -70,7 +61,7 @@ const AdminLoginPage: React.FC = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email administrateur
+                Adresse e-mail
               </label>
               <div className="mt-1">
                 <input
@@ -108,7 +99,7 @@ const AdminLoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-autowise-blue hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-autowise-blue"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-autowise-blue hover:bg-autowise-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-autowise-blue"
               >
                 {loading ? (
                   <span className="flex items-center">
@@ -119,25 +110,21 @@ const AdminLoginPage: React.FC = () => {
                     Connexion en cours...
                   </span>
                 ) : (
-                  <span className="flex items-center">
-                    <LogIn className="mr-2 h-4 w-4" /> Se connecter
-                  </span>
+                  "Se connecter"
                 )}
               </button>
             </div>
           </form>
-
+          
           <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Administration AutoWise
-                </span>
-              </div>
-            </div>
+            <p className="text-center text-sm text-gray-500">
+              <a 
+                href="/"
+                className="font-medium text-autowise-blue hover:text-autowise-blue-dark"
+              >
+                Retour au site
+              </a>
+            </p>
           </div>
         </div>
       </div>

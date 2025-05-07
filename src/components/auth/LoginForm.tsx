@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LoginForm: React.FC = () => {
@@ -9,6 +9,7 @@ const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,11 +17,10 @@ const LoginForm: React.FC = () => {
     setLoading(true);
     
     try {
-      // Simuler une requête API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      login(email, password);
-    } catch (err) {
-      setError("Erreur de connexion. Veuillez vérifier vos identifiants.");
+      await login(email, password);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || "Erreur de connexion. Veuillez vérifier vos identifiants.");
     } finally {
       setLoading(false);
     }
