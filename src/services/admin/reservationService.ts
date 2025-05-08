@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { Reservation, Car, Profile } from '@/types/supabase';
+import { Database } from '@/integrations/supabase/types';
 
 // Réservations - Admin
 export const fetchAllReservations = async () => {
@@ -13,7 +14,9 @@ export const fetchAllReservations = async () => {
     throw error;
   }
   
-  return data as (Reservation & { car: Car, user: Profile })[];
+  // Typage explicite pour résoudre l'erreur
+  const typedData = data as unknown as (Reservation & { car: Car, user: Profile })[];
+  return typedData;
 };
 
 export const updateReservationStatus = async (id: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') => {

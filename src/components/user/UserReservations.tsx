@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Car, Calendar, MapPin, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchUserReservations, cancelReservation } from '@/services/reservationService';
+import { cancelReservation } from '@/services/reservationService';
 import { getPublicImageUrl } from '@/integrations/supabase/client';
 import { Reservation } from '@/types/supabase';
 
@@ -43,8 +43,40 @@ const UserReservations: React.FC = () => {
     const loadReservations = async () => {
       try {
         setLoading(true);
-        const data = await fetchUserReservations(user.id);
-        setReservations(data || []);
+        
+        const { data, error } = await supabase
+          .from('reservations')
+          .select(`
+            *,
+            car:car_id (
+              id,
+              brand,
+              model,
+              year,
+              price,
+              images:car_images(*)
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        // Convertir les données pour correspondre à notre type Reservation
+        const typedReservations = (data || []).map(res => {
+          // Assurer que additional_options est du bon type
+          const additional_options = typeof res.additional_options === 'string' 
+            ? JSON.parse(res.additional_options) 
+            : res.additional_options;
+            
+          return {
+            ...res,
+            additional_options,
+            car: res.car
+          } as Reservation;
+        });
+        
+        setReservations(typedReservations);
       } catch (error) {
         console.error('Erreur lors du chargement des réservations:', error);
         toast({

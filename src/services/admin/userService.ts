@@ -22,5 +22,7 @@ export const fetchAllUsers = async () => {
     throw error;
   }
   
-  return data as (Profile & { user_roles: UserRole[] })[];
+  // Typage explicite pour résoudre l'erreur
+  const typedData = data as unknown as (Profile & { user_roles: UserRole[] })[];
+  return typedData;
 };

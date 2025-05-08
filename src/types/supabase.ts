@@ -21,6 +21,12 @@ export interface Car {
   created_at: string;
   updated_at: string;
   images?: CarImage[];
+  // Ajout des nouveaux champs
+  category?: string | null;
+  fuel_type?: string | null;
+  transmission?: string | null;
+  seats?: number | null;
+  rating?: number | null;
 }
 
 export interface CarImage {
@@ -46,6 +52,11 @@ export interface Reservation {
   created_at: string;
   updated_at: string;
   car?: Car;
+  // Ajout des nouveaux champs
+  payment_status?: string | null;
+  payment_method?: string | null;
+  payment_date?: string | null;
+  payment_reference?: string | null;
 }
 
 export interface UserRole {
@@ -53,4 +64,16 @@ export interface UserRole {
   user_id: string;
   role: 'client' | 'admin';
   created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string | null;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  is_read: boolean;
+  created_at: string;
+  related_entity?: string | null;
+  related_id?: string | null;
 }

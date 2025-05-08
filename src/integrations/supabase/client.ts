@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types';
+import { Notification } from '@/types/supabase';
 
 const supabaseUrl = 'https://kfxntunkuchzicizuufg.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmeG50dW5rdWNoemljaXp1dWZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1Njk5NjcsImV4cCI6MjA2MjE0NTk2N30.KVkFV2LT7Srvn99il2wrW2Yi53KwtsXrHsceT2OXzvo';
@@ -55,7 +56,7 @@ export const getPublicImageUrl = (path: string) => {
 };
 
 // Fonction pour récupérer les notifications non lues d'un utilisateur
-export const fetchUserNotifications = async (userId: string) => {
+export const fetchUserNotifications = async (userId: string): Promise<Notification[]> => {
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
@@ -67,7 +68,13 @@ export const fetchUserNotifications = async (userId: string) => {
     return [];
   }
   
-  return data || [];
+  // Assurer que le type de notification correspond à notre interface
+  const typedNotifications = (data || []).map(notif => ({
+    ...notif,
+    type: (notif.type as 'success' | 'error' | 'info') || 'info'
+  })) as Notification[];
+  
+  return typedNotifications;
 };
 
 // Fonction pour marquer une notification comme lue
@@ -88,7 +95,7 @@ export const markNotificationAsRead = async (notificationId: string) => {
 // Configuration des abonnements en temps réel
 export const subscribeToUserNotifications = (
   userId: string,
-  onNotification: (notification: any) => void
+  onNotification: (notification: Notification) => void
 ) => {
   return supabase
     .channel('notification-changes')
@@ -100,7 +107,14 @@ export const subscribeToUserNotifications = (
         table: 'notifications',
         filter: `user_id=eq.${userId}`
       },
-      (payload) => onNotification(payload.new)
+      (payload) => {
+        const notification = {
+          ...payload.new,
+          type: (payload.new.type as 'success' | 'error' | 'info') || 'info'
+        } as Notification;
+        
+        onNotification(notification);
+      }
     )
     .subscribe();
 };

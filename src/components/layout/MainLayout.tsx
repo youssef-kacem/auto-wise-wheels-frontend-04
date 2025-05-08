@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './navbar';
@@ -61,7 +60,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, requireAuth = false }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar user={user} />
+      <Navbar />
       <main className="flex-grow">
         {children}
       </main>
