@@ -8,9 +8,30 @@ import { cancelReservation } from '@/services/reservationService';
 import { getPublicImageUrl } from '@/integrations/supabase/client';
 import { Reservation } from '@/types/supabase';
 
+interface CarImage {
+  id: string;
+  car_id: string;
+  url: string;
+  is_primary: boolean;
+  created_at: string;
+}
+
+interface CarWithImages {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  price: number;
+  images?: CarImage[];
+}
+
+interface ReservationWithCar extends Omit<Reservation, 'car'> {
+  car?: CarWithImages;
+}
+
 const UserReservations: React.FC = () => {
   const { toast } = useToast();
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<ReservationWithCar[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -62,21 +83,23 @@ const UserReservations: React.FC = () => {
 
         if (error) throw error;
         
-        // Convertir les données pour correspondre à notre type Reservation
-        const typedReservations = (data || []).map(res => {
-          // Assurer que additional_options est du bon type
-          const additional_options = typeof res.additional_options === 'string' 
-            ? JSON.parse(res.additional_options) 
-            : res.additional_options;
-            
-          return {
-            ...res,
-            additional_options,
-            car: res.car
-          } as Reservation;
-        });
-        
-        setReservations(typedReservations);
+        if (data) {
+          // Convertir les données pour correspondre à notre interface ReservationWithCar
+          const typedReservations = data.map(res => {
+            // Assurer que additional_options est du bon type
+            const additional_options = typeof res.additional_options === 'string' 
+              ? JSON.parse(res.additional_options) 
+              : res.additional_options || {};
+              
+            return {
+              ...res,
+              additional_options,
+              car: res.car as CarWithImages
+            } as ReservationWithCar;
+          });
+          
+          setReservations(typedReservations);
+        }
       } catch (error) {
         console.error('Erreur lors du chargement des réservations:', error);
         toast({

@@ -63,6 +63,16 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+  
+  // Fonction pour déterminer si le chemin actuel correspond au chemin fourni
+  const isActive = (path: string) => {
+    return location.pathname.startsWith(path);
+  };
+  
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -72,11 +82,16 @@ const Navbar: React.FC = () => {
           
           {/* Menu Desktop */}
           <div className="hidden md:flex md:items-center md:space-x-8">
-            <NavbarDesktopMenu />
+            <NavbarDesktopMenu isActive={isActive} />
             <div className="flex items-center space-x-4">
-              {isAdmin && <AdminButton />}
+              {isAdmin && <AdminButton isActive={isActive} />}
               {user && <NotificationMenu />}
-              <NavbarDesktopActions user={user} />
+              <NavbarDesktopActions 
+                isAuthenticated={!!user} 
+                handleLogout={handleLogout} 
+                isActive={isActive}
+                user={user}
+              />
             </div>
           </div>
           
@@ -95,7 +110,13 @@ const Navbar: React.FC = () => {
         </div>
         
         {/* Menu Mobile */}
-        <NavbarMobileMenu isOpen={isMenuOpen} user={user} isAdmin={isAdmin} />
+        <NavbarMobileMenu 
+          isOpen={isMenuOpen} 
+          isActive={isActive} 
+          isAuthenticated={!!user} 
+          handleLogout={handleLogout} 
+          toggleMenu={toggleMenu} 
+        />
       </div>
     </header>
   );
