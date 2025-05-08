@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cancelReservation } from '@/services/reservationService';
 import { getPublicImageUrl } from '@/integrations/supabase/client';
 import { Reservation, CarImage } from '@/types/supabase';
+import Currency from '@/components/common/Currency';
 
 interface CarWithImages {
   id: string;
@@ -262,7 +263,9 @@ const UserReservations: React.FC = () => {
               {/* Actions */}
               <div className="md:w-1/4 flex flex-col justify-between items-end mt-4 md:mt-0">
                 <div className="text-right">
-                  <div className="text-xl font-bold text-autowise-blue">{reservation.total_price} €</div>
+                  <div className="text-xl font-bold text-autowise-blue">
+                    <Currency amount={reservation.total_price} />
+                  </div>
                   <div className="text-xs text-gray-500">Prix total</div>
                 </div>
                 

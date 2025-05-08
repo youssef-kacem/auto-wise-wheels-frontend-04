@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Currency from '@/components/common/Currency';
 
 // Types
 interface CarType {
@@ -523,7 +523,7 @@ const AdminCarsPage: React.FC = () => {
                         <TableCell>{car.model}</TableCell>
                         <TableCell>{car.year}</TableCell>
                         <TableCell>{car.category}</TableCell>
-                        <TableCell>{car.price} €/jour</TableCell>
+                        <TableCell><Currency amount={car.price} /></TableCell>
                         <TableCell>
                           <span 
                             className={`px-2 py-1 text-xs rounded-full ${
