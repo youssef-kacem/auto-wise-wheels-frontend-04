@@ -6,15 +6,7 @@ import { Car, Calendar, MapPin, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cancelReservation } from '@/services/reservationService';
 import { getPublicImageUrl } from '@/integrations/supabase/client';
-import { Reservation } from '@/types/supabase';
-
-interface CarImage {
-  id: string;
-  car_id: string;
-  url: string;
-  is_primary: boolean;
-  created_at: string;
-}
+import { Reservation, CarImage } from '@/types/supabase';
 
 interface CarWithImages {
   id: string;
@@ -84,17 +76,35 @@ const UserReservations: React.FC = () => {
         if (error) throw error;
         
         if (data) {
-          // Convertir les données pour correspondre à notre interface ReservationWithCar
+          // Convertir les données et gérer les images manquantes
           const typedReservations = data.map(res => {
             // Assurer que additional_options est du bon type
             const additional_options = typeof res.additional_options === 'string' 
               ? JSON.parse(res.additional_options) 
               : res.additional_options || {};
               
+            // Gérer le cas où car.images pourrait être une erreur de requête
+            let processedCar: CarWithImages | undefined;
+            
+            if (res.car) {
+              // Vérifier si images est une erreur de requête ou un tableau
+              const carImages = Array.isArray(res.car.images) ? res.car.images : [];
+              
+              // Créer un objet car correctement typé
+              processedCar = {
+                id: res.car.id,
+                brand: res.car.brand,
+                model: res.car.model,
+                year: res.car.year,
+                price: res.car.price,
+                images: carImages
+              };
+            }
+              
             return {
               ...res,
               additional_options,
-              car: res.car as CarWithImages
+              car: processedCar
             } as ReservationWithCar;
           });
           
@@ -197,6 +207,7 @@ const UserReservations: React.FC = () => {
       <h2 className="text-xl font-semibold mb-4">Mes réservations</h2>
       
       {reservations.map((reservation) => {
+        // Sécuriser l'accès aux images
         const carImage = reservation.car?.images?.find((img: any) => img.is_primary) || 
                          reservation.car?.images?.[0];
         const imageUrl = carImage ? getPublicImageUrl(carImage.url) : 'https://via.placeholder.com/300x200?text=Pas+d%27image';
