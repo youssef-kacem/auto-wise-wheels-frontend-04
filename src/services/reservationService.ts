@@ -1,109 +1,112 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { Reservation, Car } from '@/types/supabase';
-import { useEffect, useState } from 'react';
+import { Reservation } from '@/types/supabase';
 
-export const fetchUserReservations = async () => {
+// Récupérer toutes les réservations d'un utilisateur
+export const fetchUserReservations = async (userId: string) => {
   const { data, error } = await supabase
     .from('reservations')
-    .select('*, car:cars(*, car_images(*))')
+    .select(`
+      *,
+      car:car_id (
+        id,
+        brand,
+        model,
+        year,
+        price,
+        images:car_images(*)
+      )
+    `)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
-  
+
   if (error) {
-    console.error("Erreur lors de la récupération des réservations:", error);
+    console.error('Erreur lors de la récupération des réservations:', error);
     throw error;
   }
-  
-  return data as (Reservation & { car: Car & { car_images: any[] } })[];
+
+  return data;
 };
 
-export const createReservation = async (reservation: Omit<Reservation, 'id' | 'created_at' | 'updated_at'>) => {
+// Création d'une nouvelle réservation
+export const createReservation = async (reservationData: Partial<Reservation>) => {
   const { data, error } = await supabase
     .from('reservations')
-    .insert([reservation])
+    .insert(reservationData)
     .select()
     .single();
-  
+
   if (error) {
-    console.error("Erreur lors de la création de la réservation:", error);
+    console.error('Erreur lors de la création de la réservation:', error);
     throw error;
   }
-  
-  return data as Reservation;
+
+  return data;
 };
 
-export const cancelReservation = async (id: string) => {
+// Mettre à jour une réservation
+export const updateReservation = async (id: string, updates: Partial<Reservation>) => {
   const { data, error } = await supabase
     .from('reservations')
-    .update({ status: 'cancelled' })
+    .update(updates)
     .eq('id', id)
     .select()
     .single();
-  
+
   if (error) {
-    console.error("Erreur lors de l'annulation de la réservation:", error);
+    console.error('Erreur lors de la mise à jour de la réservation:', error);
     throw error;
   }
-  
-  return data as Reservation;
+
+  return data;
 };
 
-export const useFetchUserReservations = () => {
-  const [reservations, setReservations] = useState<(Reservation & { car: Car & { car_images: any[] } })[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await fetchUserReservations();
-        setReservations(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Erreur inconnue'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Vérifier si l'utilisateur est connecté avant de charger les réservations
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        fetchData();
-      } else {
-        setReservations([]);
-        setLoading(false);
-      }
-    });
-
-    // Vérifier la session actuelle
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        fetchData();
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  return { reservations, loading, error, refetch: fetchUserReservations };
+// Annuler une réservation
+export const cancelReservation = async (id: string) => {
+  return updateReservation(id, { status: 'cancelled' });
 };
 
+// Vérifier la disponibilité d'une voiture sur une période donnée
 export const checkCarAvailability = async (carId: string, startDate: string, endDate: string) => {
   const { data, error } = await supabase
-    .rpc('check_car_availability', { 
-      car_id: carId, 
-      start_date: startDate, 
-      end_date: endDate 
+    .rpc('check_car_availability', {
+      car_id: carId,
+      start_date: startDate,
+      end_date: endDate
     });
-  
+
   if (error) {
-    console.error("Erreur lors de la vérification de disponibilité:", error);
+    console.error('Erreur lors de la vérification de disponibilité:', error);
     throw error;
   }
-  
-  return data as boolean;
+
+  return data;
+};
+
+// Récupérer les détails d'une réservation spécifique
+export const getReservationDetails = async (reservationId: string) => {
+  const { data, error } = await supabase
+    .from('reservations')
+    .select(`
+      *,
+      car:car_id (
+        id,
+        brand,
+        model,
+        year,
+        price,
+        description,
+        features,
+        images:car_images(*)
+      )
+    `)
+    .eq('id', reservationId)
+    .single();
+
+  if (error) {
+    console.error('Erreur lors de la récupération des détails de la réservation:', error);
+    throw error;
+  }
+
+  return data;
 };

@@ -1,83 +1,172 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import type { Car, CarImage } from '@/types/supabase';
-import { useEffect, useState } from 'react';
+import { supabase, getPublicImageUrl } from '@/integrations/supabase/client';
+import { Car, CarImage } from '@/types/supabase';
 
-export const fetchCars = async () => {
+// Récupérer toutes les voitures avec leurs images
+export const fetchAllCars = async () => {
   const { data, error } = await supabase
     .from('cars')
-    .select('*, car_images(*)');
-  
+    .select(`
+      *,
+      images:car_images(*)
+    `)
+    .eq('is_available', true)
+    .order('brand', { ascending: true });
+
   if (error) {
-    console.error("Erreur lors de la récupération des voitures:", error);
+    console.error('Erreur lors de la récupération des voitures:', error);
     throw error;
   }
-  
-  return data as (Car & { car_images: CarImage[] })[];
+
+  // Transformer les URLs des images pour utiliser les URLs publiques
+  return data?.map(car => ({
+    ...car,
+    images: car.images?.map((image: CarImage) => ({
+      ...image,
+      url: getPublicImageUrl(image.url)
+    }))
+  }));
 };
 
-export const fetchCarById = async (id: string) => {
+// Récupérer une voiture par son ID
+export const fetchCarById = async (carId: string) => {
   const { data, error } = await supabase
     .from('cars')
-    .select('*, car_images(*)')
-    .eq('id', id)
+    .select(`
+      *,
+      images:car_images(*)
+    `)
+    .eq('id', carId)
     .single();
-  
+
   if (error) {
-    console.error(`Erreur lors de la récupération de la voiture ${id}:`, error);
+    console.error('Erreur lors de la récupération de la voiture:', error);
     throw error;
   }
+
+  // Transformer les URLs des images
+  return {
+    ...data,
+    images: data.images?.map((image: CarImage) => ({
+      ...image,
+      url: getPublicImageUrl(image.url)
+    }))
+  };
+};
+
+// Créer une nouvelle voiture
+export const createCar = async (carData: Partial<Car>) => {
+  const { data, error } = await supabase
+    .from('cars')
+    .insert(carData)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erreur lors de la création de la voiture:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Mettre à jour une voiture
+export const updateCar = async (carId: string, updates: Partial<Car>) => {
+  const { data, error } = await supabase
+    .from('cars')
+    .update(updates)
+    .eq('id', carId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erreur lors de la mise à jour de la voiture:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Supprimer une voiture
+export const deleteCar = async (carId: string) => {
+  // Supprimer d'abord les images liées à la voiture
+  const { error: imageError } = await supabase
+    .from('car_images')
+    .delete()
+    .eq('car_id', carId);
+
+  if (imageError) {
+    console.error('Erreur lors de la suppression des images:', imageError);
+    throw imageError;
+  }
+
+  // Puis supprimer la voiture
+  const { error } = await supabase
+    .from('cars')
+    .delete()
+    .eq('id', carId);
+
+  if (error) {
+    console.error('Erreur lors de la suppression de la voiture:', error);
+    throw error;
+  }
+
+  return true;
+};
+
+// Recherche de voitures avec filtres
+export const searchCars = async (filters: Record<string, any>) => {
+  let query = supabase
+    .from('cars')
+    .select(`
+      *,
+      images:car_images(*)
+    `)
+    .eq('is_available', true);
+
+  // Appliquer les filtres
+  if (filters.brand) {
+    query = query.eq('brand', filters.brand);
+  }
   
-  return data as (Car & { car_images: CarImage[] });
-};
+  if (filters.category) {
+    query = query.eq('category', filters.category);
+  }
+  
+  if (filters.minPrice) {
+    query = query.gte('price', filters.minPrice);
+  }
+  
+  if (filters.maxPrice) {
+    query = query.lte('price', filters.maxPrice);
+  }
 
-export const useFetchCars = () => {
-  const [cars, setCars] = useState<(Car & { car_images: CarImage[] })[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  if (filters.transmission) {
+    query = query.eq('transmission', filters.transmission);
+  }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await fetchCars();
-        setCars(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Erreur inconnue'));
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (filters.fuelType) {
+    query = query.eq('fuel_type', filters.fuelType);
+  }
 
-    fetchData();
-  }, []);
+  if (filters.minSeats) {
+    query = query.gte('seats', filters.minSeats);
+  }
 
-  return { cars, loading, error };
-};
+  // Exécuter la requête
+  const { data, error } = await query.order('price', { ascending: filters.sortByPriceAsc !== false });
 
-export const useFetchCarById = (id: string) => {
-  const [car, setCar] = useState<(Car & { car_images: CarImage[] }) | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  if (error) {
+    console.error('Erreur lors de la recherche des voitures:', error);
+    throw error;
+  }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const data = await fetchCarById(id);
-        setCar(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Erreur inconnue'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id]);
-
-  return { car, loading, error };
+  // Transformer les URLs des images
+  return data?.map(car => ({
+    ...car,
+    images: car.images?.map((image: CarImage) => ({
+      ...image,
+      url: getPublicImageUrl(image.url)
+    }))
+  }));
 };

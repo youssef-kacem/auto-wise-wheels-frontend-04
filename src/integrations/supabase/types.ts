@@ -44,39 +44,90 @@ export type Database = {
       cars: {
         Row: {
           brand: string
+          category: string | null
           created_at: string
           description: string | null
           features: Json | null
+          fuel_type: string | null
           id: string
           is_available: boolean | null
           model: string
           price: number
+          rating: number | null
+          seats: number | null
+          transmission: string | null
           updated_at: string
           year: number
         }
         Insert: {
           brand: string
+          category?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
+          fuel_type?: string | null
           id?: string
           is_available?: boolean | null
           model: string
           price: number
+          rating?: number | null
+          seats?: number | null
+          transmission?: string | null
           updated_at?: string
           year: number
         }
         Update: {
           brand?: string
+          category?: string | null
           created_at?: string
           description?: string | null
           features?: Json | null
+          fuel_type?: string | null
           id?: string
           is_available?: boolean | null
           model?: string
           price?: number
+          rating?: number | null
+          seats?: number | null
+          transmission?: string | null
           updated_at?: string
           year?: number
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          related_entity: string | null
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          related_entity?: string | null
+          related_id?: string | null
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          related_entity?: string | null
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -117,6 +168,10 @@ export type Database = {
           created_at: string
           end_date: string
           id: string
+          payment_date: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string | null
           pickup_location: string
           return_location: string
           start_date: string
@@ -132,6 +187,10 @@ export type Database = {
           created_at?: string
           end_date: string
           id?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
           pickup_location: string
           return_location: string
           start_date: string
@@ -147,6 +206,10 @@ export type Database = {
           created_at?: string
           end_date?: string
           id?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
           pickup_location?: string
           return_location?: string
           start_date?: string
@@ -198,6 +261,14 @@ export type Database = {
       }
       is_admin: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      is_car_available: {
+        Args: {
+          car_id_param: string
+          start_date_param: string
+          end_date_param: string
+        }
         Returns: boolean
       }
     }

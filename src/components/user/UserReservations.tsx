@@ -1,80 +1,85 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Car, Calendar, MapPin, Check, X } from 'lucide-react';
-
-// Type pour les réservations
-interface Reservation {
-  id: number;
-  carId: number;
-  carBrand: string;
-  carModel: string;
-  carImage: string;
-  startDate: string;
-  endDate: string;
-  pickupLocation: string;
-  returnLocation: string;
-  withDriver: boolean;
-  price: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-}
-
-const mockReservations: Reservation[] = [
-  {
-    id: 1,
-    carId: 1,
-    carBrand: 'Audi',
-    carModel: 'A5',
-    carImage: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    startDate: '2025-06-10',
-    endDate: '2025-06-15',
-    pickupLocation: 'Paris, 75008',
-    returnLocation: 'Paris, 75008',
-    withDriver: false,
-    price: 480,
-    status: 'confirmed',
-  },
-  {
-    id: 2,
-    carId: 3,
-    carBrand: 'Mercedes',
-    carModel: 'Classe E',
-    carImage: 'https://images.unsplash.com/photo-1554223090-7e482851df45?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    startDate: '2025-07-20',
-    endDate: '2025-07-25',
-    pickupLocation: 'Lyon, 69002',
-    returnLocation: 'Lyon, 69002',
-    withDriver: true,
-    price: 950,
-    status: 'pending',
-  },
-  {
-    id: 3,
-    carId: 5,
-    carBrand: 'BMW',
-    carModel: 'X5',
-    carImage: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
-    startDate: '2025-05-05',
-    endDate: '2025-05-08',
-    pickupLocation: 'Marseille, 13008',
-    returnLocation: 'Nice, 06000',
-    withDriver: false,
-    price: 620,
-    status: 'completed',
-  }
-];
+import { supabase } from '@/integrations/supabase/client';
+import { fetchUserReservations, cancelReservation } from '@/services/reservationService';
+import { getPublicImageUrl } from '@/integrations/supabase/client';
+import { Reservation } from '@/types/supabase';
 
 const UserReservations: React.FC = () => {
   const { toast } = useToast();
-  
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Vérifier la session de l'utilisateur
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+      }
+    };
+
+    checkSession();
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadReservations = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchUserReservations(user.id);
+        setReservations(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement des réservations:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger vos réservations.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReservations();
+  }, [user, toast]);
+
   // Fonction pour annuler une réservation
-  const handleCancelReservation = (id: number) => {
-    // Normalement, appel à l'API pour annuler la réservation
-    toast({
-      title: "Réservation annulée",
-      description: "Votre réservation a été annulée avec succès.",
-    });
+  const handleCancelReservation = async (id: string) => {
+    try {
+      await cancelReservation(id);
+      // Mettre à jour l'état local
+      setReservations(reservations.map(res => 
+        res.id === id ? { ...res, status: 'cancelled' } : res
+      ));
+      toast({
+        title: "Réservation annulée",
+        description: "Votre réservation a été annulée avec succès.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'annulation de la réservation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'annuler la réservation.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Fonction pour obtenir la couleur du statut
@@ -109,8 +114,17 @@ const UserReservations: React.FC = () => {
     }
   };
 
+  // Affichage de chargement
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-autowise-blue"></div>
+      </div>
+    );
+  }
+
   // Aucune réservation
-  if (mockReservations.length === 0) {
+  if (reservations.length === 0) {
     return (
       <div className="text-center py-10">
         <Car size={48} className="mx-auto text-gray-300 mb-3" />
@@ -127,92 +141,88 @@ const UserReservations: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold mb-4">Mes réservations</h2>
       
-      {mockReservations.map((reservation) => (
-        <div 
-          key={reservation.id} 
-          className="bg-white rounded-lg shadow-sm border p-4 md:p-6"
-        >
-          <div className="flex flex-col md:flex-row">
-            {/* Image */}
-            <div className="md:w-1/4 mb-4 md:mb-0">
-              <img 
-                src={reservation.carImage} 
-                alt={`${reservation.carBrand} ${reservation.carModel}`} 
-                className="w-full h-40 md:h-32 object-cover rounded-md"
-              />
-            </div>
-            
-            {/* Détails */}
-            <div className="md:w-2/4 md:px-6">
-              <div className="flex justify-between items-start">
-                <h3 className="text-lg font-semibold mb-2">{reservation.carBrand} {reservation.carModel}</h3>
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
-                  {translateStatus(reservation.status)}
-                </span>
+      {reservations.map((reservation) => {
+        const carImage = reservation.car?.images?.find((img: any) => img.is_primary) || 
+                         reservation.car?.images?.[0];
+        const imageUrl = carImage ? getPublicImageUrl(carImage.url) : 'https://via.placeholder.com/300x200?text=Pas+d%27image';
+
+        return (
+          <div 
+            key={reservation.id} 
+            className="bg-white rounded-lg shadow-sm border p-4 md:p-6"
+          >
+            <div className="flex flex-col md:flex-row">
+              {/* Image */}
+              <div className="md:w-1/4 mb-4 md:mb-0">
+                <img 
+                  src={imageUrl} 
+                  alt={`${reservation.car?.brand} ${reservation.car?.model}`} 
+                  className="w-full h-40 md:h-32 object-cover rounded-md"
+                />
               </div>
               
-              <div className="space-y-2">
-                <div className="flex items-start">
-                  <Calendar size={16} className="mt-1 mr-2 text-gray-500 flex-shrink-0" />
-                  <span className="text-sm">
-                    Du {new Date(reservation.startDate).toLocaleDateString('fr-FR')} au {new Date(reservation.endDate).toLocaleDateString('fr-FR')}
+              {/* Détails */}
+              <div className="md:w-2/4 md:px-6">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-semibold mb-2">{reservation.car?.brand} {reservation.car?.model}</h3>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status || '')}`}>
+                    {translateStatus(reservation.status || '')}
                   </span>
                 </div>
-                <div className="flex items-start">
-                  <MapPin size={16} className="mt-1 mr-2 text-gray-500 flex-shrink-0" />
-                  <div className="text-sm">
-                    <div>Prise en charge: {reservation.pickupLocation}</div>
-                    <div>Retour: {reservation.returnLocation}</div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-start">
+                    <Calendar size={16} className="mt-1 mr-2 text-gray-500 flex-shrink-0" />
+                    <span className="text-sm">
+                      Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
+                    </span>
                   </div>
+                  <div className="flex items-start">
+                    <MapPin size={16} className="mt-1 mr-2 text-gray-500 flex-shrink-0" />
+                    <div className="text-sm">
+                      <div>Prise en charge: {reservation.pickup_location}</div>
+                      <div>Retour: {reservation.return_location}</div>
+                    </div>
+                  </div>
+                  {reservation.with_driver && (
+                    <div className="flex items-center">
+                      <Check size={16} className="mr-2 text-green-500 flex-shrink-0" />
+                      <span className="text-sm">Avec chauffeur</span>
+                    </div>
+                  )}
                 </div>
-                {reservation.withDriver && (
-                  <div className="flex items-center">
-                    <Check size={16} className="mr-2 text-green-500 flex-shrink-0" />
-                    <span className="text-sm">Avec chauffeur</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Actions */}
-            <div className="md:w-1/4 flex flex-col justify-between items-end mt-4 md:mt-0">
-              <div className="text-right">
-                <div className="text-xl font-bold text-autowise-blue">{reservation.price} €</div>
-                <div className="text-xs text-gray-500">Prix total</div>
               </div>
               
-              <div className="flex flex-col space-y-2 mt-4 w-full">
-                <Link 
-                  to={`/cars/${reservation.carId}`} 
-                  className="text-sm text-center text-autowise-blue hover:underline"
-                >
-                  Voir la voiture
-                </Link>
+              {/* Actions */}
+              <div className="md:w-1/4 flex flex-col justify-between items-end mt-4 md:mt-0">
+                <div className="text-right">
+                  <div className="text-xl font-bold text-autowise-blue">{reservation.total_price} €</div>
+                  <div className="text-xs text-gray-500">Prix total</div>
+                </div>
                 
-                {reservation.status === 'pending' && (
-                  <button 
-                    onClick={() => handleCancelReservation(reservation.id)}
-                    className="flex items-center justify-center text-sm px-3 py-1 border border-red-500 text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                <div className="flex flex-col space-y-2 mt-4 w-full">
+                  <Link 
+                    to={`/cars/${reservation.car_id}`} 
+                    className="text-sm text-center text-autowise-blue hover:underline"
                   >
-                    <X size={14} className="mr-1" />
-                    Annuler
-                  </button>
-                )}
-                
-                {reservation.status === 'confirmed' && (
-                  <button 
-                    onClick={() => handleCancelReservation(reservation.id)}
-                    className="flex items-center justify-center text-sm px-3 py-1 border border-red-500 text-red-500 rounded-md hover:bg-red-50 transition-colors"
-                  >
-                    <X size={14} className="mr-1" />
-                    Annuler
-                  </button>
-                )}
+                    Voir la voiture
+                  </Link>
+                  
+                  {(reservation.status === 'pending' || reservation.status === 'confirmed') && (
+                    <button 
+                      onClick={() => handleCancelReservation(reservation.id)}
+                      className="flex items-center justify-center text-sm px-3 py-1 border border-red-500 text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                    >
+                      <X size={14} className="mr-1" />
+                      Annuler
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
