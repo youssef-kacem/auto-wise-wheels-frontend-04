@@ -58,3 +58,15 @@ export interface UserRole {
   role: 'client' | 'admin';
   created_at: string;
 }
+
+export interface Notification {
+  id: string;
+  user_id: string | null;
+  title: string;
+  message: string;
+  type: 'error' | 'success' | 'info';
+  is_read: boolean;
+  created_at: string;
+  related_entity?: string | null;
+  related_id?: string | null;
+}
