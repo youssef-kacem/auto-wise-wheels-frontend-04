@@ -126,10 +126,14 @@ const CarsPage = () => {
 
     if (locationParam) setLocation(locationParam);
     if (fromParam && toParam) {
-      setDateRange({
-        from: new Date(fromParam),
-        to: new Date(toParam)
-      });
+      try {
+        setDateRange({
+          from: new Date(fromParam),
+          to: new Date(toParam)
+        });
+      } catch (error) {
+        console.error("Erreur lors de l'analyse des dates:", error);
+      }
     }
   }, [searchParams]);
 
@@ -139,7 +143,7 @@ const CarsPage = () => {
     
     let result = [...allCars];
     
-    if (filters.brand.length > 0) {
+    if (filters.brand && filters.brand.length > 0) {
       result = result.filter(car => filters.brand.includes(car.brand));
     }
     
@@ -211,7 +215,11 @@ const CarsPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Dates de location
                 </label>
-                <DateRangePicker onChange={setDateRange} />
+                <DateRangePicker onChange={(range) => {
+                  if (range) {
+                    setDateRange(range);
+                  }
+                }} />
               </div>
               
               <div className="flex items-end">
