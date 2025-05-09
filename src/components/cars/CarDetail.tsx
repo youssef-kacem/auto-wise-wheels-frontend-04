@@ -3,7 +3,6 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext'; 
 import { CheckCircle, XCircle, Star, Info, User, Calendar, Thermometer, Fuel, Settings, ChevronRight } from 'lucide-react';
-import Currency from '../common/Currency';
 
 interface CarDetailProps {
   car: {
@@ -71,7 +70,7 @@ const CarDetail: React.FC<CarDetailProps> = ({ car }) => {
           </div>
           <div className="mt-4 md:mt-0">
             <div className="text-3xl font-bold text-autowise-blue">
-              <Currency amount={car.price} showSymbol={true} /><span className="text-sm text-gray-500 font-normal">/jour</span>
+              {car.price} TND<span className="text-sm text-gray-500 font-normal">/jour</span>
             </div>
             <button 
               onClick={handleBookingClick}

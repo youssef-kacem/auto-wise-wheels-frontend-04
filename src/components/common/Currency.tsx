@@ -2,25 +2,19 @@
 import React from 'react';
 
 interface CurrencyProps {
-  amount: number | string;
+  amount: number;
   showSymbol?: boolean;
 }
 
-const Currency: React.FC<CurrencyProps> = ({ amount, showSymbol = true }) => {
-  // Convertir en nombre si nécessaire
-  const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  
-  // Formater avec le séparateur de milliers et 3 décimales maximum
+const Currency: React.FC<CurrencyProps> = ({ amount, showSymbol = false }) => {
   const formattedAmount = new Intl.NumberFormat('fr-TN', {
+    style: showSymbol ? 'currency' : 'decimal',
+    currency: 'TND',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  }).format(numericAmount);
-  
-  return (
-    <span className="whitespace-nowrap">
-      {formattedAmount}{showSymbol && ' TND'}
-    </span>
-  );
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+  return <>{formattedAmount}</>;
 };
 
 export default Currency;
