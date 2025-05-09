@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useNavbar } from './contexts/NavbarContext';
 
 const MobileMenuToggle: React.FC = () => {
@@ -8,12 +8,16 @@ const MobileMenuToggle: React.FC = () => {
   
   return (
     <button 
-      onClick={toggleMobileMenu}
+      onClick={() => toggleMobileMenu()}
       className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
       aria-expanded={isMobileMenuOpen}
       aria-label="Toggle menu"
     >
-      <Menu size={24} />
+      {isMobileMenuOpen ? (
+        <X size={24} />
+      ) : (
+        <Menu size={24} />
+      )}
     </button>
   );
 };

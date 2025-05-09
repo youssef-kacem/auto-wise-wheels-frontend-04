@@ -28,7 +28,8 @@ export const useReservations = (userId: string | undefined) => {
               brand,
               model,
               year,
-              price
+              price,
+              images:car_images(*)
             )
           `)
           .eq('user_id', userId)

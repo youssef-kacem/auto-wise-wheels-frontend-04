@@ -4,9 +4,32 @@ import { useReservations } from '@/hooks/useReservations';
 import ReservationCard from './reservation/ReservationCard';
 import EmptyReservationState from './reservation/EmptyReservationState';
 import LoadingState from './reservation/LoadingState';
+import { useAuth } from '@/contexts/AuthContext';
+import { cancelReservation } from '@/services/reservationService';
+import { useToast } from '@/hooks/use-toast';
 
 const UserReservations: React.FC = () => {
-  const { reservations, loading, handleCancelReservation } = useReservations();
+  const { user } = useAuth();
+  const { reservations, loading, error } = useReservations(user?.id);
+  const { toast } = useToast();
+
+  const handleCancelReservation = async (id: string) => {
+    try {
+      await cancelReservation(id);
+      toast({
+        title: "Réservation annulée",
+        description: "Votre réservation a été annulée avec succès",
+      });
+      // Reload reservations (this will happen automatically if useReservations is set up with react-query)
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'annuler la réservation",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Show loading state
   if (loading) {

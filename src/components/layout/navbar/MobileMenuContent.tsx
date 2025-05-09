@@ -9,7 +9,7 @@ const MobileMenuContent: React.FC = () => {
   if (!isMobileMenuOpen) return null;
   
   return (
-    <div className="lg:hidden absolute top-full left-0 right-0 bg-white z-50 shadow-md">
+    <div className="lg:hidden fixed top-full left-0 right-0 bg-white z-50 shadow-md">
       <div className="container-autowise">
         <NavbarMobileMenu />
       </div>
