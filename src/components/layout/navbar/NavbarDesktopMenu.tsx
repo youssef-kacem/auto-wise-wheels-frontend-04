@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface NavbarDesktopMenuProps {
   isActive: (path: string) => boolean;
@@ -8,42 +8,24 @@ interface NavbarDesktopMenuProps {
 
 const NavbarDesktopMenu: React.FC<NavbarDesktopMenuProps> = ({ isActive }) => {
   return (
-    <nav className="hidden md:flex space-x-6">
-      <Link 
-        to="/" 
-        className={`text-base transition-colors duration-200 hover:text-autowise-blue ${
-          isActive('/') && !isActive('/cars') && !isActive('/services') && !isActive('/contact') 
-            ? "text-autowise-blue font-medium" 
-            : "text-gray-700"
-        }`}
-      >
+    <div className="ml-10 flex items-center space-x-6">
+      <Link to="/" 
+        className={`${isActive('/') && !isActive('/cars') && !isActive('/services') && !isActive('/contact') ? 'text-autowise-blue font-medium' : 'text-gray-700 hover:text-autowise-blue'} font-medium transition-colors duration-200`}>
         Accueil
       </Link>
-      <Link 
-        to="/cars" 
-        className={`text-base transition-colors duration-200 hover:text-autowise-blue ${
-          isActive('/cars') ? "text-autowise-blue font-medium" : "text-gray-700"
-        }`}
-      >
-        Nos Véhicules
+      <Link to="/cars" 
+        className={`${isActive('/cars') ? 'text-autowise-blue font-medium' : 'text-gray-700 hover:text-autowise-blue'} font-medium transition-colors duration-200`}>
+        Voitures
       </Link>
-      <Link 
-        to="/services" 
-        className={`text-base transition-colors duration-200 hover:text-autowise-blue ${
-          isActive('/services') ? "text-autowise-blue font-medium" : "text-gray-700"
-        }`}
-      >
+      <Link to="/services" 
+        className={`${isActive('/services') ? 'text-autowise-blue font-medium' : 'text-gray-700 hover:text-autowise-blue'} font-medium transition-colors duration-200`}>
         Services
       </Link>
-      <Link 
-        to="/contact" 
-        className={`text-base transition-colors duration-200 hover:text-autowise-blue ${
-          isActive('/contact') ? "text-autowise-blue font-medium" : "text-gray-700"
-        }`}
-      >
+      <Link to="/contact" 
+        className={`${isActive('/contact') ? 'text-autowise-blue font-medium' : 'text-gray-700 hover:text-autowise-blue'} font-medium transition-colors duration-200`}>
         Contact
       </Link>
-    </nav>
+    </div>
   );
 };
 

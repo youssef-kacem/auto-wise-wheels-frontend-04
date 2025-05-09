@@ -4,27 +4,13 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Car, Calendar, MapPin, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { cancelReservation } from '@/services/reservationService';
+import { fetchUserReservations, cancelReservation } from '@/services/reservationService';
 import { getPublicImageUrl } from '@/integrations/supabase/client';
-import { Reservation, CarImage } from '@/types/supabase';
-import Currency from '@/components/common/Currency';
-
-interface CarWithImages {
-  id: string;
-  brand: string;
-  model: string;
-  year: number;
-  price: number;
-  images?: CarImage[];
-}
-
-interface ReservationWithCar extends Omit<Reservation, 'car'> {
-  car?: CarWithImages;
-}
+import { Reservation } from '@/types/supabase';
 
 const UserReservations: React.FC = () => {
   const { toast } = useToast();
-  const [reservations, setReservations] = useState<ReservationWithCar[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -57,60 +43,8 @@ const UserReservations: React.FC = () => {
     const loadReservations = async () => {
       try {
         setLoading(true);
-        
-        const { data, error } = await supabase
-          .from('reservations')
-          .select(`
-            *,
-            car:car_id (
-              id,
-              brand,
-              model,
-              year,
-              price,
-              images:car_images(*)
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        if (data) {
-          // Convertir les données et gérer les images manquantes
-          const typedReservations = data.map(res => {
-            // Assurer que additional_options est du bon type
-            const additional_options = typeof res.additional_options === 'string' 
-              ? JSON.parse(res.additional_options) 
-              : res.additional_options || {};
-              
-            // Gérer le cas où car.images pourrait être une erreur de requête
-            let processedCar: CarWithImages | undefined;
-            
-            if (res.car) {
-              // Vérifier si images est une erreur de requête ou un tableau
-              const carImages = Array.isArray(res.car.images) ? res.car.images : [];
-              
-              // Créer un objet car correctement typé
-              processedCar = {
-                id: res.car.id,
-                brand: res.car.brand,
-                model: res.car.model,
-                year: res.car.year,
-                price: res.car.price,
-                images: carImages
-              };
-            }
-              
-            return {
-              ...res,
-              additional_options,
-              car: processedCar
-            } as ReservationWithCar;
-          });
-          
-          setReservations(typedReservations);
-        }
+        const data = await fetchUserReservations(user.id);
+        setReservations(data || []);
       } catch (error) {
         console.error('Erreur lors du chargement des réservations:', error);
         toast({
@@ -208,7 +142,6 @@ const UserReservations: React.FC = () => {
       <h2 className="text-xl font-semibold mb-4">Mes réservations</h2>
       
       {reservations.map((reservation) => {
-        // Sécuriser l'accès aux images
         const carImage = reservation.car?.images?.find((img: any) => img.is_primary) || 
                          reservation.car?.images?.[0];
         const imageUrl = carImage ? getPublicImageUrl(carImage.url) : 'https://via.placeholder.com/300x200?text=Pas+d%27image';
@@ -263,9 +196,7 @@ const UserReservations: React.FC = () => {
               {/* Actions */}
               <div className="md:w-1/4 flex flex-col justify-between items-end mt-4 md:mt-0">
                 <div className="text-right">
-                  <div className="text-xl font-bold text-autowise-blue">
-                    <Currency amount={reservation.total_price} />
-                  </div>
+                  <div className="text-xl font-bold text-autowise-blue">{reservation.total_price} €</div>
                   <div className="text-xs text-gray-500">Prix total</div>
                 </div>
                 

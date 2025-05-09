@@ -8,19 +8,15 @@ interface NavbarMobileMenuProps {
   isAuthenticated: boolean;
   handleLogout: () => void;
   toggleMenu: () => void;
-  isOpen: boolean;
 }
 
 const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({ 
   isActive, 
   isAuthenticated,
   handleLogout,
-  toggleMenu,
-  isOpen
+  toggleMenu
 }) => {
   const location = useLocation();
-  
-  if (!isOpen) return null;
   
   return (
     <div className="md:hidden mt-4 pb-4 space-y-4 animate-fade-in">
@@ -74,10 +70,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
               Mon Compte
             </Link>
             <button 
-              onClick={() => {
-                handleLogout();
-                toggleMenu();
-              }} 
+              onClick={handleLogout} 
               className="btn-outline w-full text-center flex items-center justify-center text-red-600 border-red-600 hover:bg-red-50"
             >
               <LogOut size={18} className="mr-2" />

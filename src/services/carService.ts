@@ -55,28 +55,10 @@ export const fetchCarById = async (carId: string) => {
 };
 
 // Créer une nouvelle voiture
-export const createCar = async (carData: Car) => {
-  // S'assurer que les champs requis sont présents
-  if (!carData.brand || !carData.model || !carData.price || !carData.year) {
-    throw new Error('Les champs brand, model, price et year sont requis');
-  }
-
+export const createCar = async (carData: Partial<Car>) => {
   const { data, error } = await supabase
     .from('cars')
-    .insert({
-      brand: carData.brand,
-      model: carData.model,
-      price: carData.price,
-      year: carData.year,
-      description: carData.description,
-      features: carData.features,
-      is_available: carData.is_available,
-      category: carData.category,
-      fuel_type: carData.fuel_type,
-      transmission: carData.transmission,
-      seats: carData.seats,
-      rating: carData.rating
-    })
+    .insert(carData)
     .select()
     .single();
 

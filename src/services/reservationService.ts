@@ -29,27 +29,10 @@ export const fetchUserReservations = async (userId: string) => {
 };
 
 // Création d'une nouvelle réservation
-export const createReservation = async (reservationData: Reservation) => {
-  // S'assurer que les champs requis sont présents
-  if (!reservationData.start_date || !reservationData.end_date || !reservationData.pickup_location || 
-      !reservationData.return_location || !reservationData.total_price) {
-    throw new Error('Tous les champs requis doivent être remplis');
-  }
-
+export const createReservation = async (reservationData: Partial<Reservation>) => {
   const { data, error } = await supabase
     .from('reservations')
-    .insert({
-      user_id: reservationData.user_id,
-      car_id: reservationData.car_id,
-      start_date: reservationData.start_date,
-      end_date: reservationData.end_date,
-      pickup_location: reservationData.pickup_location,
-      return_location: reservationData.return_location,
-      with_driver: reservationData.with_driver,
-      additional_options: reservationData.additional_options,
-      total_price: reservationData.total_price,
-      status: reservationData.status || 'pending'
-    })
+    .insert(reservationData)
     .select()
     .single();
 

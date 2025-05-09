@@ -1,9 +1,9 @@
+
 import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar, Check, X, AlertCircle, Search, Filter, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Currency from '@/components/common/Currency';
 
 // Types
 interface Reservation {
@@ -297,7 +297,7 @@ const AdminReservationsPage: React.FC = () => {
                           <p>Au: {formatDate(reservation.endDate)}</p>
                         </div>
                       </TableCell>
-                      <TableCell><Currency amount={reservation.totalPrice} /></TableCell>
+                      <TableCell>{reservation.totalPrice} €</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 text-xs rounded-full ${getStatusClass(reservation.status)}`}>
                           {getStatusText(reservation.status)}
@@ -374,7 +374,7 @@ const AdminReservationsPage: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-medium mb-2">Paiement</h4>
-                <p><span className="font-medium">Prix total:</span> <Currency amount={selectedReservation.totalPrice} /></p>
+                <p><span className="font-medium">Prix total:</span> {selectedReservation.totalPrice} €</p>
                 <p><span className="font-medium">Statut du paiement:</span> Payé</p>
               </div>
             </div>

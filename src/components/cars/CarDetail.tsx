@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext'; 
@@ -69,9 +68,7 @@ const CarDetail: React.FC<CarDetailProps> = ({ car }) => {
             </div>
           </div>
           <div className="mt-4 md:mt-0">
-            <div className="text-3xl font-bold text-autowise-blue">
-              {car.price} TND<span className="text-sm text-gray-500 font-normal">/jour</span>
-            </div>
+            <div className="text-3xl font-bold text-autowise-blue">{car.price} €<span className="text-sm text-gray-500 font-normal">/jour</span></div>
             <button 
               onClick={handleBookingClick}
               className="mt-2 block w-full md:w-auto btn-primary text-center"

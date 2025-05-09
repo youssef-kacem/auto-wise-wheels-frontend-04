@@ -1,124 +1,83 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import NavbarLogo from './NavbarLogo';
 import NavbarDesktopMenu from './NavbarDesktopMenu';
-import NavbarMobileMenu from './NavbarMobileMenu';
 import NavbarDesktopActions from './NavbarDesktopActions';
+import NavbarMobileMenu from './NavbarMobileMenu';
 import AdminButton from './AdminButton';
-import NotificationMenu from './NotificationMenu';
 
-const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, logout, user } = useAuth();
+  const isAdmin = localStorage.getItem('autowise_admin_authenticated') === 'true';
   const location = useLocation();
 
-  useEffect(() => {
-    // Vérifier la session actuelle
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-
-      if (session?.user) {
-        // Vérifier si l'utilisateur est admin
-        const { data: adminStatus } = await supabase.rpc('is_admin', { 
-          user_id: session.user.id 
-        });
-        setIsAdmin(adminStatus || false);
-      }
-    };
-
-    checkSession();
-
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user || null);
-
-        if (session?.user) {
-          // Vérifier si l'utilisateur est admin
-          const { data: adminStatus } = await supabase.rpc('is_admin', { 
-            user_id: session.user.id 
-          });
-          setIsAdmin(adminStatus || false);
-        } else {
-          setIsAdmin(false);
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Fermer le menu mobile lors du changement de page
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location]);
-
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    setIsOpen(!isOpen);
   };
-  
-  // Fonction pour déterminer si le chemin actuel correspond au chemin fourni
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
+  };
+
   const isActive = (path: string) => {
-    return location.pathname.startsWith(path);
-  };
-  
-  // Fonction de déconnexion
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex justify-between items-center">
+    <nav className="bg-white shadow-sm">
+      <div className="container-autowise py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
           <NavbarLogo />
-          
-          {/* Menu Desktop */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
+
+          {/* Navigation desktop */}
+          <div className="hidden md:block">
             <NavbarDesktopMenu isActive={isActive} />
-            <div className="flex items-center space-x-4">
-              {isAdmin && <AdminButton isActive={isActive} />}
-              {user && <NotificationMenu />}
-              <NavbarDesktopActions 
-                isAuthenticated={!!user} 
-                handleLogout={handleLogout} 
-                isActive={isActive}
-                user={user}
-              />
-            </div>
           </div>
-          
-          {/* Bouton menu mobile */}
-          <button
-            className="md:hidden p-2 focus:outline-none"
-            onClick={toggleMenu}
-            aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-          >
-            {isMenuOpen ? (
-              <X className="h-6 w-6 text-gray-700" />
-            ) : (
-              <Menu className="h-6 w-6 text-gray-700" />
-            )}
-          </button>
+
+          {/* Boutons */}
+          <div className="hidden md:flex items-center space-x-4">
+            <NavbarDesktopActions 
+              isAuthenticated={isAuthenticated} 
+              handleLogout={handleLogout}
+              isActive={isActive}
+              user={user}
+            />
+            
+            {/* Admin Button */}
+            {isAdmin && <AdminButton isActive={isActive} />}
+          </div>
+
+          {/* Mobile menu toggle and admin button */}
+          <div className="flex md:hidden items-center">
+            {/* Admin Button Mobile */}
+            {isAdmin && <AdminButton isActive={isActive} isMobile={true} />}
+            
+            <button
+              onClick={toggleMenu}
+              className="text-gray-700 hover:text-autowise-blue focus:outline-none transition-colors duration-200"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
-        
-        {/* Menu Mobile */}
-        <NavbarMobileMenu 
-          isOpen={isMenuOpen} 
-          isActive={isActive} 
-          isAuthenticated={!!user} 
-          handleLogout={handleLogout} 
-          toggleMenu={toggleMenu} 
-        />
+
+        {/* Mobile menu */}
+        {isOpen && (
+          <NavbarMobileMenu 
+            isActive={isActive} 
+            isAuthenticated={isAuthenticated}
+            handleLogout={handleLogout}
+            toggleMenu={toggleMenu}
+          />
+        )}
       </div>
-    </header>
+    </nav>
   );
 };
 

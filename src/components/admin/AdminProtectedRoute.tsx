@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -10,23 +10,20 @@ interface AdminProtectedRouteProps {
 const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
   const { isAuthenticated, isAdmin, loading } = useAuth();
-  
+  const [adminChecked, setAdminChecked] = useState(false);
+
+  // Si l'utilisateur est authentifié mais n'est pas admin, rediriger vers la page d'accueil
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-autowise-blue"></div>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-autowise-blue"></div>
+    </div>;
   }
   
   if (!isAuthenticated) {
-    // Rediriger vers la page de connexion admin avec l'URL de retour
-    return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
   
-  if (!isAdmin) {
-    console.log("Accès non autorisé : l'utilisateur n'est pas administrateur");
-    // Rediriger vers la page d'accueil
+  if (isAuthenticated && !isAdmin) {
     return <Navigate to="/" replace />;
   }
   

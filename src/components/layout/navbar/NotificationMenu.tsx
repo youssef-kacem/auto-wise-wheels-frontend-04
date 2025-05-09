@@ -4,8 +4,16 @@ import { Bell } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Notification } from '@/types/supabase';
+import { supabase, fetchUserNotifications, markNotificationAsRead, subscribeToUserNotifications } from '@/integrations/supabase/client';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+  is_read: boolean;
+  created_at: string;
+}
 
 const NotificationMenu: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -42,73 +50,37 @@ const NotificationMenu: React.FC = () => {
 
     // Charger les notifications initiales
     const loadNotifications = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        // Convertir le type de notification pour correspondre à notre type
-        const typedNotifications = (data || []).map(notif => ({
-          ...notif,
-          type: (notif.type as 'success' | 'error' | 'info') || 'info'
-        }));
-        
-        setNotifications(typedNotifications);
-        setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
-      } catch (error) {
-        console.error("Erreur lors du chargement des notifications:", error);
-      }
+      const data = await fetchUserNotifications(user.id);
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.is_read).length);
     };
 
     loadNotifications();
 
     // S'abonner aux notifications en temps réel
-    const channel = supabase
-      .channel('public:notifications')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, 
-        (payload) => {
-          const newNotification = {
-            ...payload.new,
-            type: (payload.new.type as 'success' | 'error' | 'info') || 'info'
-          } as Notification;
-          
-          setNotifications(prev => [newNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-          
-          // Afficher un toast pour la nouvelle notification
-          toast({
-            title: newNotification.title,
-            description: newNotification.message,
-            variant: newNotification.type === 'error' ? 'destructive' : 'default'
-          });
-        }
-      )
-      .subscribe();
+    const subscription = subscribeToUserNotifications(
+      user.id,
+      (newNotification) => {
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+        
+        // Afficher un toast pour la nouvelle notification
+        toast({
+          title: newNotification.title,
+          description: newNotification.message,
+          variant: newNotification.type === 'error' ? 'destructive' : 'default'
+        });
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      subscription.unsubscribe();
     };
   }, [user, toast]);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-        
-      if (error) throw error;
-      
+      await markNotificationAsRead(notificationId);
       setNotifications(notifications.map(n => 
         n.id === notificationId ? { ...n, is_read: true } : n
       ));
@@ -120,18 +92,9 @@ const NotificationMenu: React.FC = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      const unreadNotificationIds = notifications
-        .filter(n => !n.is_read)
-        .map(n => n.id);
-        
-      if (unreadNotificationIds.length === 0) return;
-      
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .in('id', unreadNotificationIds);
-      
-      if (error) throw error;
+      for (const notification of notifications.filter(n => !n.is_read)) {
+        await markNotificationAsRead(notification.id);
+      }
       
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);

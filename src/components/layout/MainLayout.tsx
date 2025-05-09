@@ -61,7 +61,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, requireAuth = false }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Navbar user={user} />
       <main className="flex-grow">
         {children}
       </main>
