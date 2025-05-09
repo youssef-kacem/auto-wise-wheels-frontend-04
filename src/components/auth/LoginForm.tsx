@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from "@/components/ui/use-toast";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const LoginForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,8 +19,24 @@ const LoginForm: React.FC = () => {
     setLoading(true);
     
     try {
-      await login(email, password);
-      navigate('/');
+      const { error: loginError } = await login(email, password);
+      
+      if (loginError) {
+        setError(loginError.message || "Erreur de connexion. Veuillez vérifier vos identifiants.");
+        toast({
+          variant: "destructive",
+          title: "Erreur de connexion",
+          description: "Identifiants incorrects. Veuillez réessayer.",
+        });
+      } else {
+        // Redirection vers la page d'origine ou la page d'accueil
+        const from = (location.state as any)?.from || '/';
+        navigate(from);
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur AutoWise!",
+        });
+      }
     } catch (err: any) {
       setError(err.message || "Erreur de connexion. Veuillez vérifier vos identifiants.");
     } finally {
