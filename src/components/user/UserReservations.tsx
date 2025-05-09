@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -8,9 +7,23 @@ import { fetchUserReservations, cancelReservation } from '@/services/reservation
 import { getPublicImageUrl } from '@/integrations/supabase/client';
 import { Reservation } from '@/types/supabase';
 
+// Extended interface for local use with car information
+interface ReservationWithCar extends Reservation {
+  car?: {
+    id: string;
+    brand: string;
+    model: string;
+    images?: Array<{
+      id: string;
+      url: string;
+      is_primary: boolean;
+    }>;
+  };
+}
+
 const UserReservations: React.FC = () => {
   const { toast } = useToast();
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<ReservationWithCar[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -44,7 +57,8 @@ const UserReservations: React.FC = () => {
       try {
         setLoading(true);
         const data = await fetchUserReservations(user.id);
-        setReservations(data || []);
+        // Cast the response to our extended type
+        setReservations((data || []) as ReservationWithCar[]);
       } catch (error) {
         console.error('Erreur lors du chargement des réservations:', error);
         toast({

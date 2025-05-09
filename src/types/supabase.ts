@@ -46,6 +46,10 @@ export interface Reservation {
   created_at: string;
   updated_at: string;
   car?: Car;
+  payment_date?: string | null;
+  payment_method?: string | null;
+  payment_reference?: string | null;
+  payment_status?: string | null;
 }
 
 export interface UserRole {

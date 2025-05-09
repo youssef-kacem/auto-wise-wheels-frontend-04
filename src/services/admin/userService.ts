@@ -33,7 +33,8 @@ export const fetchAllUsers = async () => {
       throw error;
     }
     
-    return data as (Profile & { user_roles: UserRole[] })[];
+    // Type assertion to handle the response safely
+    return (data || []) as unknown as (Profile & { user_roles: UserRole[] })[];
   } catch (error) {
     console.error("Erreur dans fetchAllUsers:", error);
     throw error;

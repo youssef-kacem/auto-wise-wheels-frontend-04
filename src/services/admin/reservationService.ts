@@ -14,7 +14,8 @@ export const fetchAllReservations = async () => {
       throw error;
     }
     
-    return (data || []) as (Reservation & { car: Car, user: Profile })[];
+    // Type assertion to handle the response safely
+    return (data || []) as unknown as (Reservation & { car: Car, user: Profile })[];
   } catch (error) {
     console.error("Erreur dans fetchAllReservations:", error);
     throw error;

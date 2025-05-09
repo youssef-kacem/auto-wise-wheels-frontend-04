@@ -29,7 +29,18 @@ export const fetchUserReservations = async (userId: string) => {
 };
 
 // Création d'une nouvelle réservation
-export const createReservation = async (reservationData: Partial<Reservation>) => {
+export const createReservation = async (reservationData: {
+  user_id: string;
+  car_id: string;
+  start_date: string;
+  end_date: string;
+  pickup_location: string;
+  return_location: string;
+  total_price: number;
+  with_driver?: boolean;
+  additional_options?: Record<string, any>;
+  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+}) => {
   const { data, error } = await supabase
     .from('reservations')
     .insert(reservationData)
@@ -45,7 +56,16 @@ export const createReservation = async (reservationData: Partial<Reservation>) =
 };
 
 // Mettre à jour une réservation
-export const updateReservation = async (id: string, updates: Partial<Reservation>) => {
+export const updateReservation = async (id: string, updates: {
+  start_date?: string;
+  end_date?: string;
+  pickup_location?: string;
+  return_location?: string;
+  total_price?: number;
+  with_driver?: boolean;
+  additional_options?: Record<string, any>;
+  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+}) => {
   const { data, error } = await supabase
     .from('reservations')
     .update(updates)

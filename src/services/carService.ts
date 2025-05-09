@@ -55,7 +55,7 @@ export const fetchCarById = async (carId: string) => {
 };
 
 // Créer une nouvelle voiture
-export const createCar = async (carData: Partial<Car>) => {
+export const createCar = async (carData: Omit<Car, 'id' | 'created_at' | 'updated_at'>) => {
   const { data, error } = await supabase
     .from('cars')
     .insert(carData)
@@ -71,7 +71,7 @@ export const createCar = async (carData: Partial<Car>) => {
 };
 
 // Mettre à jour une voiture
-export const updateCar = async (carId: string, updates: Partial<Car>) => {
+export const updateCar = async (carId: string, updates: Partial<Omit<Car, 'id' | 'created_at' | 'updated_at'>>) => {
   const { data, error } = await supabase
     .from('cars')
     .update(updates)

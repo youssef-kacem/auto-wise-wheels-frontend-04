@@ -13,6 +13,9 @@ interface Notification {
   type: 'success' | 'error' | 'info';
   is_read: boolean;
   created_at: string;
+  user_id?: string;
+  related_entity?: string;
+  related_id?: string;
 }
 
 const NotificationMenu: React.FC = () => {
@@ -50,9 +53,17 @@ const NotificationMenu: React.FC = () => {
 
     // Charger les notifications initiales
     const loadNotifications = async () => {
-      const data = await fetchUserNotifications(user.id);
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
+      try {
+        const data = await fetchUserNotifications(user.id);
+        const typedNotifications = (data || []).map(n => ({
+          ...n,
+          type: (n.type as 'success' | 'error' | 'info') || 'info'
+        })) as Notification[];
+        setNotifications(typedNotifications);
+        setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
     };
 
     loadNotifications();
@@ -61,7 +72,12 @@ const NotificationMenu: React.FC = () => {
     const subscription = subscribeToUserNotifications(
       user.id,
       (newNotification) => {
-        setNotifications(prev => [newNotification, ...prev]);
+        const typedNotification = {
+          ...newNotification,
+          type: (newNotification.type as 'success' | 'error' | 'info') || 'info'
+        } as Notification;
+        
+        setNotifications(prev => [typedNotification, ...prev]);
         setUnreadCount(prev => prev + 1);
         
         // Afficher un toast pour la nouvelle notification
