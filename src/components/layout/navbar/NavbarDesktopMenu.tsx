@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useNavbar } from './contexts/NavbarContext';
 
-interface NavbarDesktopMenuProps {
-  isActive: (path: string) => boolean;
-}
-
-const NavbarDesktopMenu: React.FC<NavbarDesktopMenuProps> = ({ isActive }) => {
+const NavbarDesktopMenu: React.FC = () => {
+  const { isActive } = useNavbar();
+  
   return (
     <div className="ml-10 flex items-center space-x-6">
       <Link to="/" 

@@ -2,21 +2,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Car, LogOut, User } from 'lucide-react';
-import { User as SupabaseUser } from '@supabase/supabase-js';
+import { useNavbar } from './contexts/NavbarContext';
 
-interface NavbarDesktopActionsProps {
-  isAuthenticated: boolean;
-  handleLogout: () => void;
-  isActive: (path: string) => boolean;
-  user: SupabaseUser | null;
-}
-
-const NavbarDesktopActions: React.FC<NavbarDesktopActionsProps> = ({ 
-  isAuthenticated, 
-  handleLogout, 
-  isActive,
-  user
-}) => {
+const NavbarDesktopActions: React.FC = () => {
+  const { isAuthenticated, handleLogout, isActive, user } = useNavbar();
   const location = useLocation();
 
   // Récupérer le nom d'utilisateur à partir des métadonnées ou utiliser un fallback

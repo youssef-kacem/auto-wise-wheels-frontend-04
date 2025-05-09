@@ -5,6 +5,7 @@ import Navbar from './navbar';
 import Footer from './Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Toaster } from '@/components/ui/toaster';
+import LoadingState from '../user/reservation/LoadingState';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -54,7 +55,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, requireAuth = false }
   if (loading && requireAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-autowise-blue"></div>
+        <LoadingState />
       </div>
     );
   }

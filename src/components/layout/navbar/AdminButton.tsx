@@ -8,13 +8,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavbar } from './contexts/NavbarContext';
 
 interface AdminButtonProps {
-  isActive: (path: string) => boolean;
   isMobile?: boolean;
 }
 
-const AdminButton: React.FC<AdminButtonProps> = ({ isActive, isMobile = false }) => {
+const AdminButton: React.FC<AdminButtonProps> = ({ isMobile = false }) => {
+  const { isActive, user } = useNavbar();
+  
+  // Don't render if there's no user
+  if (!user) return null;
+  
   return (
     <TooltipProvider>
       <Tooltip>

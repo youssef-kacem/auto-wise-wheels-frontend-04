@@ -5,60 +5,30 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { supabase, fetchUserNotifications, markNotificationAsRead, subscribeToUserNotifications } from '@/integrations/supabase/client';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'success' | 'error' | 'info';
-  is_read: boolean;
-  created_at: string;
-  user_id?: string;
-  related_entity?: string;
-  related_id?: string;
-}
+import { Notification } from '@/types/supabase';
+import { useNavbar } from './contexts/NavbarContext';
 
 const NotificationMenu: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const { user } = useNavbar();
+
+  // Don't render if there's no user
+  if (!user) return null;
 
   useEffect(() => {
-    // Vérifier la session de l'utilisateur
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      }
-    };
-
-    checkSession();
-
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
     // Charger les notifications initiales
     const loadNotifications = async () => {
       try {
         const data = await fetchUserNotifications(user.id);
+        // Cast the returned data to the correct type
         const typedNotifications = (data || []).map(n => ({
           ...n,
           type: (n.type as 'success' | 'error' | 'info') || 'info'
         })) as Notification[];
+        
         setNotifications(typedNotifications);
         setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
       } catch (error) {
@@ -139,8 +109,6 @@ const NotificationMenu: React.FC = () => {
       return 'Date incorrecte';
     }
   };
-
-  if (!user) return null;
 
   return (
     <div className="relative">

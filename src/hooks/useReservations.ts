@@ -1,53 +1,49 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchUserReservations, cancelReservation } from '@/services/reservationService';
 import { Reservation } from '@/types/supabase';
+import { useToast } from './use-toast';
 
-export const useReservations = () => {
-  const { toast } = useToast();
+export const useReservations = (userId: string | undefined) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Check user session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      }
-    };
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-    checkSession();
-
-    // Listen for authentication changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const loadReservations = async () => {
+    const fetchReservations = async () => {
       try {
         setLoading(true);
-        const data = await fetchUserReservations(user.id);
-        // Cast the response to ensure type safety
-        setReservations(data as Reservation[]);
-      } catch (error) {
-        console.error('Erreur lors du chargement des réservations:', error);
+        const { data, error } = await supabase
+          .from('reservations')
+          .select(`
+            *,
+            car:car_id (
+              id,
+              brand,
+              model,
+              year,
+              price
+            )
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Use type assertion to ensure compatibility with Reservation type
+        setReservations(data as unknown as Reservation[]);
+      } catch (err) {
+        console.error("Error fetching reservations:", err);
+        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
         toast({
           title: "Erreur",
-          description: "Impossible de charger vos réservations.",
+          description: "Impossible de charger vos réservations",
           variant: "destructive",
         });
       } finally {
@@ -55,33 +51,10 @@ export const useReservations = () => {
       }
     };
 
-    loadReservations();
-  }, [user, toast]);
+    fetchReservations();
+  }, [userId, toast]);
 
-  const handleCancelReservation = async (id: string) => {
-    try {
-      await cancelReservation(id);
-      // Update local state
-      setReservations(reservations.map(res => 
-        res.id === id ? { ...res, status: 'cancelled' } : res
-      ));
-      toast({
-        title: "Réservation annulée",
-        description: "Votre réservation a été annulée avec succès.",
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'annulation de la réservation:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'annuler la réservation.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return {
-    reservations,
-    loading,
-    handleCancelReservation
-  };
+  return { reservations, loading, error };
 };
+
+export default useReservations;

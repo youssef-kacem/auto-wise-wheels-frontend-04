@@ -2,20 +2,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Car, LogOut, User } from 'lucide-react';
+import { useNavbar } from './contexts/NavbarContext';
 
-interface NavbarMobileMenuProps {
-  isActive: (path: string) => boolean;
-  isAuthenticated: boolean;
-  handleLogout: () => void;
-  toggleMenu: () => void;
-}
-
-const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({ 
-  isActive, 
-  isAuthenticated,
-  handleLogout,
-  toggleMenu
-}) => {
+const NavbarMobileMenu: React.FC = () => {
+  const { isActive, isAuthenticated, handleLogout, toggleMobileMenu } = useNavbar();
   const location = useLocation();
   
   return (
@@ -26,7 +16,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
             ? 'bg-autowise-blue text-white' 
             : 'text-gray-700 hover:bg-gray-100'
         }`} 
-        onClick={toggleMenu}>
+        onClick={toggleMobileMenu}>
         Accueil
       </Link>
       <Link to="/cars" 
@@ -35,7 +25,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
             ? 'bg-autowise-blue text-white' 
             : 'text-gray-700 hover:bg-gray-100'
         }`} 
-        onClick={toggleMenu}>
+        onClick={toggleMobileMenu}>
         Voitures
       </Link>
       <Link to="/services" 
@@ -44,7 +34,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
             ? 'bg-autowise-blue text-white' 
             : 'text-gray-700 hover:bg-gray-100'
         }`} 
-        onClick={toggleMenu}>
+        onClick={toggleMobileMenu}>
         Services
       </Link>
       <Link to="/contact" 
@@ -53,7 +43,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
             ? 'bg-autowise-blue text-white' 
             : 'text-gray-700 hover:bg-gray-100'
         }`} 
-        onClick={toggleMenu}>
+        onClick={toggleMobileMenu}>
         Contact
       </Link>
       <div className="pt-2 flex flex-col space-y-2">
@@ -65,7 +55,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
                   ? 'bg-autowise-blue text-white' 
                   : ''
               }`} 
-              onClick={toggleMenu}>
+              onClick={toggleMobileMenu}>
               <User size={18} className="mr-2" />
               Mon Compte
             </Link>
@@ -84,7 +74,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
                 ? 'bg-autowise-blue text-white' 
                 : ''
             }`} 
-            onClick={toggleMenu}>
+            onClick={toggleMobileMenu}>
             Connexion
           </Link>
         )}
@@ -94,7 +84,7 @@ const NavbarMobileMenu: React.FC<NavbarMobileMenuProps> = ({
               ? 'bg-autowise-blue-dark' 
               : ''
           }`} 
-          onClick={toggleMenu}>
+          onClick={toggleMobileMenu}>
           <Car size={18} className="mr-2" />
           Réserver
         </Link>
