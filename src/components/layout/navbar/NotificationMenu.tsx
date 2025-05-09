@@ -14,11 +14,15 @@ const NotificationMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useNavbar();
-
-  // Don't render if there's no user
-  if (!user) return null;
-
+  
   useEffect(() => {
+    // Only proceed with fetching and subscribing if there's a user
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    
     // Charger les notifications initiales
     const loadNotifications = async () => {
       try {
@@ -63,6 +67,9 @@ const NotificationMenu: React.FC = () => {
       subscription.unsubscribe();
     };
   }, [user, toast]);
+
+  // Don't render the UI if there's no user
+  if (!user) return null;
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
