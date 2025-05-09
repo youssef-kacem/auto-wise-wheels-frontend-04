@@ -33,16 +33,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
+  // Fonction pour vérifier si l'utilisateur est admin
+  const checkIsAdmin = async (userId: string) => {
+    try {
+      console.log("Vérification du rôle admin pour l'utilisateur:", userId);
+      const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
+      
+      if (error) {
+        console.error("Erreur lors de la vérification du rôle admin:", error);
+        setIsAdmin(false);
+        return;
+      }
+      
+      console.log("Résultat de la vérification admin:", data);
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error("Exception lors de la vérification du rôle admin:", error);
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // D'abord, configurer l'écouteur d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        console.log("Événement d'authentification détecté:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsAuthenticated(!!currentSession);
         
-        // Defer checking admin status with setTimeout to avoid deadlocks
+        // Vérifier le rôle admin si l'utilisateur est connecté
         if (currentSession?.user) {
+          // Utiliser un délai pour éviter les problèmes de synchronisation
           setTimeout(() => {
             checkIsAdmin(currentSession.user.id);
           }, 0);
@@ -59,38 +81,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsAuthenticated(!!currentSession);
-      
-      if (currentSession?.user) {
-        checkIsAdmin(currentSession.user.id);
+    // Ensuite, vérifier la session existante
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Session existante:", currentSession ? "Oui" : "Non");
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsAuthenticated(!!currentSession);
+        
+        if (currentSession?.user) {
+          await checkIsAdmin(currentSession.user.id);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation de l'authentification:", error);
+        setLoading(false);
       }
-      
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     return () => {
       subscription.unsubscribe();
     };
   }, [toast]);
-
-  const checkIsAdmin = async (userId: string) => {
-    try {
-      const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
-      if (error) {
-        console.error("Erreur lors de la vérification du rôle admin:", error);
-        setIsAdmin(false);
-        return;
-      }
-      setIsAdmin(!!data);
-    } catch (error) {
-      console.error("Erreur lors de la vérification du rôle admin:", error);
-      setIsAdmin(false);
-    }
-  };
 
   const login = async (email: string, password: string) => {
     try {

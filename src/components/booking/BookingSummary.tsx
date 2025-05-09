@@ -42,6 +42,11 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   numberOfDays,
   totalPrice,
 }) => {
+  // Format pour afficher le prix en dinars tunisiens
+  const formatPriceTND = (price: number) => {
+    return `${price.toLocaleString('fr-TN')} TND`;
+  };
+
   return (
     <div className="bg-gray-50 rounded-lg p-5 sticky top-4">
       <h2 className="text-xl font-semibold mb-4">Récapitulatif</h2>
@@ -128,13 +133,13 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
       <div className="mt-6 pt-4 border-t border-gray-200">
         <div className="flex justify-between mb-2">
           <span className="text-gray-600">Prix de base</span>
-          <span>{car ? `${car.price} € × ${numberOfDays} jours` : '-'}</span>
+          <span>{car ? `${formatPriceTND(car.price)} × ${numberOfDays} jours` : '-'}</span>
         </div>
         
         {withDriver && (
           <div className="flex justify-between mb-2">
             <span className="text-gray-600">Chauffeur</span>
-            <span>80 € × {numberOfDays} jours</span>
+            <span>{formatPriceTND(80)} × {numberOfDays} jours</span>
           </div>
         )}
         
@@ -143,14 +148,14 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           return option && (
             <div key={option.id} className="flex justify-between mb-2">
               <span className="text-gray-600">{option.name}</span>
-              <span>{option.price} € × {numberOfDays} jours</span>
+              <span>{formatPriceTND(option.price)} × {numberOfDays} jours</span>
             </div>
           );
         })}
         
         <div className="flex justify-between font-bold text-lg mt-4 pt-2 border-t border-gray-200">
           <span>Total</span>
-          <span>{totalPrice} €</span>
+          <span>{formatPriceTND(totalPrice)}</span>
         </div>
       </div>
       

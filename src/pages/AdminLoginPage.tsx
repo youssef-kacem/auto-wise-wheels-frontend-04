@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,30 +15,49 @@ const AdminLoginPage: React.FC = () => {
   // Si l'utilisateur est déjà connecté et est admin, rediriger vers le dashboard
   useEffect(() => {
     if (isAuthenticated && isAdmin) {
+      console.log("Utilisateur déjà authentifié comme admin, redirection vers le dashboard admin");
       navigate('/admin/dashboard');
+    } else if (isAuthenticated && !isAdmin) {
+      console.log("Utilisateur authentifié mais pas admin, affichage d'un message d'erreur");
+      toast({
+        title: "Accès refusé",
+        description: "Vous n'avez pas les droits d'administration nécessaires.",
+        variant: "destructive",
+      });
     }
-  }, [isAuthenticated, isAdmin, navigate]);
+  }, [isAuthenticated, isAdmin, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log("Tentative de connexion administrateur avec:", email);
       // Utiliser la fonction login du contexte d'authentification
       await login(email, password);
       
       // La vérification admin se fait automatiquement dans le contexte
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue dans l'espace d'administration",
-      });
-      
+      // et la redirection est gérée par l'useEffect ci-dessus
     } catch (error: any) {
       toast({
         title: "Erreur de connexion",
         description: error.message || "Identifiants invalides",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction de test pour une connexion admin rapide (à utiliser uniquement en développement)
+  const handleTestAdminLogin = async () => {
+    setEmail('admin@autowise.tn');
+    setPassword('adminpassword');
+    try {
+      setLoading(true);
+      await login('admin@autowise.tn', 'adminpassword');
+    } catch (error) {
+      console.error("Erreur de connexion test:", error);
     } finally {
       setLoading(false);
     }
@@ -125,6 +143,16 @@ const AdminLoginPage: React.FC = () => {
                 Retour au site
               </a>
             </p>
+          </div>
+          
+          {/* Bouton de connexion rapide en mode développement */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <button
+              onClick={handleTestAdminLogin}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              Test Admin Login (Pour développement)
+            </button>
           </div>
         </div>
       </div>
